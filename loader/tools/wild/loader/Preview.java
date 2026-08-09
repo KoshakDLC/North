@@ -49,13 +49,13 @@ public final class Preview {
             try {
                begin.invoke(loader, "Запуск");
                Pipeline.Sink sink = (Pipeline.Sink)sinkMethod.invoke(loader, false);
-               sink.log("Ключ подтверждён — lowfi.", Theme.OK);
-               sink.log("Minecraft: C:\\Users\\lowfi\\AppData\\Roaming\\.minecraft", Theme.OK);
+               sink.log("Папка игры: C:\\Users\\lowfi\\AppData\\Roaming\\.minecraft", Theme.OK);
                sink.log("Fabric: fabric-loader-0.19.3-1.21.8", Theme.OK);
-               sink.log("Удалена старая сборка wild-v0.jar", Theme.MUTED);
-               sink.log("Установлен wild-v1.jar (4.2 МБ).", Theme.OK);
-               sink.log("Fabric API не найден — проверь папку mods.", Theme.WARN);
-               sink.progress(0.62, "Установка клиента");
+               sink.log("Репозиторий: KoshakDLC/LowFree", Theme.MUTED);
+               sink.log("Новая сборка v1.4 — wild-v1.4.jar (4.2 МБ)", Theme.MUTED);
+               sink.log("Скачано wild-v1.4.jar (4.2 МБ).", Theme.OK);
+               sink.log("Удалена старая сборка wild-v1.3.jar", Theme.MUTED);
+               sink.progress(0.62, "Загрузка клиента");
             } catch (Exception exception3) {
                throw new RuntimeException(exception3);
             }

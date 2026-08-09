@@ -283,7 +283,7 @@ final class Widgets {
       private String trailing;
       private Runnable onTrailing;
 
-      Field(String label, String placeholder, boolean secret) {
+      Field(String label, String placeholder) {
          this.label = label;
          this.placeholder = placeholder;
          this.focus = Anim.attach(this, 0.0, 0.2);
@@ -295,7 +295,7 @@ final class Widgets {
          this.input.setCaretColor(Theme.ACCENT);
          this.input.setSelectionColor(Theme.alpha(Theme.ACCENT, 0.35));
          this.input.setSelectedTextColor(Theme.WHITE);
-         this.input.setFont(secret ? Theme.mono(13.5F) : Theme.font(Font.PLAIN, 13.5F));
+         this.input.setFont(Theme.font(Font.PLAIN, 13.5F));
          this.input.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent event) {
@@ -752,43 +752,6 @@ final class Widgets {
          Theme.stroke(g2, 0.0, 0.0, size, size, size * 0.31, Theme.alpha(Theme.WHITE, 0.28), 1.0);
          Font font = Theme.font(Font.BOLD, (float)(size * 0.56));
          Theme.textCentered(g2, "L", size / 2.0, Theme.baseline(g2, 0.0, size, font), font, new Color(0x18, 0x12, 0x2C));
-         g2.dispose();
-      }
-   }
-
-   /** Small status chip, e.g. the license state. */
-   static final class Chip extends JComponent {
-      private String text;
-      private Color color;
-
-      Chip(String text, Color color) {
-         this.text = text;
-         this.color = color;
-         Anim.tick(() -> {
-            if (this.isShowing()) {
-               this.repaint();
-            }
-         });
-      }
-
-      void set(String text, Color color) {
-         this.text = text;
-         this.color = color;
-         this.repaint();
-      }
-
-      @Override
-      protected void paintComponent(Graphics g) {
-         Graphics2D g2 = Theme.hq(g);
-         double height = this.getHeight();
-         double width = this.getWidth();
-         Theme.fill(g2, 0.0, 0.0, width, height, height / 2.0, Theme.alpha(this.color, 0.13));
-         Theme.stroke(g2, 0.0, 0.0, width, height, height / 2.0, Theme.alpha(this.color, 0.35), 1.0);
-         double dot = 6.0;
-         double pulse = 0.6 + 0.4 * Math.sin(Anim.time() * 2.2);
-         Theme.fill(g2, 13.0, height / 2.0 - dot / 2.0, dot, dot, dot / 2.0, Theme.alpha(this.color, 0.55 + 0.45 * pulse));
-         Font font = Theme.font(Font.BOLD, 11.0F);
-         Theme.text(g2, this.text, 26.0, Theme.baseline(g2, 0.0, height, font), font, Theme.mix(this.color, Theme.WHITE, 0.35));
          g2.dispose();
       }
    }

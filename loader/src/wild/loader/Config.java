@@ -11,14 +11,13 @@ import java.util.Properties;
 
 /** Loader settings, persisted next to the client data in %APPDATA%. */
 final class Config {
-   static final String KEY = "license.key";
+   /** Hidden override: the loader finds the game folder itself unless this is set by hand. */
    static final String MC_DIR = "minecraft.dir";
    static final String JAR = "client.jar";
    static final String REPO = "github.repo";
    static final String CLIENT_URL = "client.url";
    static final String DEFAULT_REPO = "KoshakDLC/LowFree";
    static final String RAM = "memory.gb";
-   static final String API = "license.api";
    static final String LAUNCH_CMD = "launch.command";
    static final String CLOSE_ON_LAUNCH = "close.on.launch";
    static final String AUTO_INSTALL = "auto.install";
@@ -150,7 +149,7 @@ final class Config {
       }
    }
 
-   /** Stable per machine identifier sent along with the license key. */
+   /** Stable per machine identifier, shown in the interface so a user can name their setup. */
    static String hardwareId() {
       try {
          String seed = System.getProperty("user.name", "?") + "|" + hostName() + "|" + System.getProperty("os.arch", "?");

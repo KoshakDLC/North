@@ -2,6 +2,7 @@ package wild.loader;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -9,11 +10,11 @@ import java.awt.Graphics2D;
 import java.awt.GraphicsDevice.WindowTranslucency;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
@@ -24,7 +25,7 @@ import javax.swing.UIManager;
 /** Entry point and window composition for the low free loader. */
 public final class Loader {
    private static final int WIDTH = 1004;
-   private static final int HEIGHT = 736;
+   private static final int HEIGHT = 664;
    private static final int SIDEBAR = 250;
    private static final int HEADER = 54;
    private static final int GUTTER = 34;
@@ -38,9 +39,7 @@ public final class Loader {
    private final JComponent[] pages = new JComponent[3];
    private final Widgets.Log log = new Widgets.Log();
    private final Widgets.Progress progress = new Widgets.Progress();
-   private final Widgets.Chip status = new Widgets.Chip("ОФЛАЙН", Theme.MUTED);
    private Widgets.Btn launchButton;
-   private Widgets.Field keyField;
    private String stage = "Готов к запуску";
    private int active = -1;
    private boolean running;
@@ -88,9 +87,8 @@ public final class Loader {
       drag(this.root, this.frame);
       this.select(0);
       this.frame.setVisible(true);
-      this.keyField.input().requestFocusInWindow();
       this.log.add("Загрузчик готов. Версия " + VERSION + " для Minecraft " + GAME_VERSION + ".", Theme.MUTED);
-      this.log.add("Источник сборки: " + this.config.get(Config.REPO, Config.DEFAULT_REPO), Theme.MUTED);
+      this.log.add("Папка игры: " + this.gameDir(), Theme.MUTED);
    }
 
    private static int contentWidth() {
@@ -138,8 +136,13 @@ public final class Loader {
          protected void paintComponent(Graphics g) {
             Graphics2D g2 = Theme.hq(g);
             Theme.text(g2, "С возвращением", 0.0, 30.0, Theme.font(Font.BOLD, 25.0F), Theme.TEXT);
-            Theme.text(g2, "Проверим ключ, обновим сборку и откроем игру.", 0.0, 52.0, Theme.font(Font.PLAIN, 13.0F), Theme.MUTED);
+            Theme.text(g2, "Одна кнопка: скачаем свежую сборку и откроем игру.", 0.0, 52.0, Theme.font(Font.PLAIN, 13.0F), Theme.MUTED);
             Theme.glass(g2, 0.0, 76.0, this.getWidth(), 118.0, 16.0, 1.0);
+            Theme.text(g2, "ИСТОЧНИК СБОРКИ", 22.0, 108.0, Theme.font(Font.BOLD, 10.5F), Theme.FAINT);
+            Font repoFont = Theme.font(Font.BOLD, 16.0F);
+            String repo = Loader.this.config.get(Config.REPO, Config.DEFAULT_REPO);
+            Theme.text(g2, Theme.ellipsize(g2, repo, repoFont, this.getWidth() - 280.0), 22.0, 134.0, repoFont, Theme.TEXT);
+            Theme.text(g2, "Ставится в mods автоматически", 22.0, 158.0, Theme.font(Font.PLAIN, 12.5F), Theme.MUTED);
             Font stageFont = Theme.font(Font.BOLD, 12.0F);
             Theme.text(g2, Loader.this.stage, 2.0, 262.0, stageFont, Theme.mix(Theme.MUTED, Theme.TEXT, 0.5));
             String percent = Math.round(Loader.this.progressValue() * 100.0) + "%";
@@ -148,59 +151,37 @@ public final class Loader {
             g2.dispose();
          }
       };
-      this.keyField = new Widgets.Field("Лицензионный ключ", "XXXX-XXXX-XXXX-XXXX", true);
-      this.keyField.value(this.config.get(Config.KEY, ""));
-      this.keyField.setBounds(20, 96, 372, 78);
-      this.keyField.input().addActionListener(event -> this.launch());
-      page.add(this.keyField);
       this.launchButton = new Widgets.Btn("ЗАПУСТИТЬ", true, this::launch);
-      this.launchButton.setBounds(contentWidth() - 222, 122, 202, 46);
+      this.launchButton.setBounds(contentWidth() - 222, 112, 202, 46);
       page.add(this.launchButton);
       Widgets.Btn install = new Widgets.Btn("Только установить", false, this::installOnly);
       install.setBounds(0, 200, 176, 34);
       page.add(install);
-      this.status.setBounds(contentWidth() - 148, 202, 148, 30);
-      page.add(this.status);
       this.progress.setBounds(0, 272, contentWidth(), 8);
       page.add(this.progress);
       this.log.setBounds(0, 316, contentWidth(), contentHeight() - 316);
       page.add(this.log);
-      this.refreshStatus();
       return page;
    }
 
    private JComponent buildSettings() {
       Loader.Page page = new Loader.Page();
-      Widgets.Card paths = new Widgets.Card("Пути");
-      paths.setBounds(0, 0, contentWidth(), 204);
-      Widgets.Field mcDir = new Widgets.Field("Папка Minecraft", Config.defaultMinecraftDir().toString(), false);
-      mcDir.value(this.config.get(Config.MC_DIR, ""));
-      mcDir.setBounds(20, 40, contentWidth() - 40, 68);
-      mcDir.setTrailing("Обзор", () -> this.browse(mcDir, true));
-      bindSave(mcDir, Config.MC_DIR, this.config);
-      paths.add(mcDir);
-      Widgets.Field jar = new Widgets.Field("Джарник клиента", "авто: build/libs/wild-*.jar", false);
-      jar.value(this.config.get(Config.JAR, ""));
-      jar.setBounds(20, 118, contentWidth() - 40, 68);
-      jar.setTrailing("Обзор", () -> this.browse(jar, false));
-      bindSave(jar, Config.JAR, this.config);
-      paths.add(jar);
-      page.add(paths);
-      Widgets.Card network = new Widgets.Card("Сеть");
-      network.setBounds(0, 216, contentWidth(), 204);
-      Widgets.Field repo = new Widgets.Field("Репозиторий с клиентом", Config.DEFAULT_REPO, false);
+      Widgets.Card source = new Widgets.Card("Источник клиента");
+      source.setBounds(0, 0, contentWidth(), 204);
+      Widgets.Field repo = new Widgets.Field("Репозиторий с релизами", Config.DEFAULT_REPO);
       repo.value(this.config.get(Config.REPO, Config.DEFAULT_REPO));
       repo.setBounds(20, 40, contentWidth() - 40, 68);
-      bindSave(repo, Config.REPO, this.config);
-      network.add(repo);
-      Widgets.Field api = new Widgets.Field("Сервер лицензий", "пусто — офлайн-режим", false);
-      api.value(this.config.get(Config.API, ""));
-      api.setBounds(20, 118, contentWidth() - 40, 68);
-      bindSave(api, Config.API, this.config, this::refreshStatus);
-      network.add(api);
-      page.add(network);
+      bindSave(repo, Config.REPO, this.config, () -> this.pages[0].repaint());
+      source.add(repo);
+      Widgets.Field jar = new Widgets.Field("Свой джарник", "пусто — берём с GitHub");
+      jar.value(this.config.get(Config.JAR, ""));
+      jar.setBounds(20, 118, contentWidth() - 40, 68);
+      jar.setTrailing("Обзор", () -> this.browse(jar));
+      bindSave(jar, Config.JAR, this.config);
+      source.add(jar);
+      page.add(source);
       Widgets.Card options = new Widgets.Card("Параметры");
-      options.setBounds(0, 432, contentWidth(), 180);
+      options.setBounds(0, 216, contentWidth(), 180);
       Widgets.Slider ram = new Widgets.Slider("Память для игры", " ГБ", 2, 16, 1, this.config.getInt(Config.RAM, 4));
       ram.setBounds(20, 38, contentWidth() - 40, 40);
       ram.onChange(() -> {
@@ -223,7 +204,29 @@ public final class Loader {
       });
       options.add(closeOnLaunch);
       page.add(options);
+      Widgets.Btn gameFolder = new Widgets.Btn("Открыть папку игры", false, () -> this.open(this.gameDir()));
+      gameFolder.setBounds(0, 412, 204, 36);
+      page.add(gameFolder);
+      Widgets.Btn cacheFolder = new Widgets.Btn("Открыть папку загрузок", false, () -> this.open(Config.cacheDir()));
+      cacheFolder.setBounds(216, 412, 224, 36);
+      page.add(cacheFolder);
       return page;
+   }
+
+   /** The game folder is automatic; the config value stays as a manual override for odd setups. */
+   private Path gameDir() {
+      String configured = this.config.get(Config.MC_DIR, "");
+      return configured.isEmpty() ? Config.defaultMinecraftDir() : Path.of(configured);
+   }
+
+   private void open(Path directory) {
+      try {
+         Files.createDirectories(directory);
+         Desktop.getDesktop().open(directory.toFile());
+      } catch (Exception exception2) {
+         this.select(0);
+         this.log.add("Не удалось открыть " + directory, Theme.BAD);
+      }
    }
 
    private JComponent buildAbout() {
@@ -236,8 +239,8 @@ public final class Loader {
             Theme.text(g2, VERSION + " · Minecraft " + GAME_VERSION + " · Fabric", 28.0, 80.0, Theme.font(Font.PLAIN, 13.0F), Theme.ACCENT);
             Font font = Theme.font(Font.PLAIN, 12.5F);
             String[] lines = {
-               "Загрузчик проверяет ключ, ставит свежую сборку в папку mods",
-               "и открывает лаунчер с профилем Fabric.",
+               "Загрузчик сам берёт свежую сборку с GitHub, кладёт её в mods",
+               "и открывает игру. Настраивать пути не нужно.",
                "",
                "HWID: " + Config.hardwareId(),
                "Настройки: " + Config.appData().resolve("low free").resolve("loader.properties")
@@ -253,11 +256,10 @@ public final class Loader {
             Theme.glass(g2, 0.0, 226.0, this.getWidth(), cardHeight, 16.0, 1.0);
             Theme.text(g2, "ЧТО ПРОИСХОДИТ ПРИ ЗАПУСКЕ", 28.0, 258.0, Theme.font(Font.BOLD, 11.0F), Theme.MUTED);
             String[] steps = {
-               "Проверка лицензионного ключа",
-               "Поиск папки Minecraft",
+               "Папка игры находится сама",
                "Проверка установленного Fabric " + GAME_VERSION,
                "Скачивание свежей сборки с GitHub",
-               "Установка джарника в mods и запуск лаунчера"
+               "Установка джарника в mods и запуск игры"
             };
             double spacing = Theme.clamp((cardHeight - 96.0) / steps.length, 38.0, 56.0);
             double stepY = 292.0;
@@ -303,11 +305,8 @@ public final class Loader {
 
    private void launch() {
       if (!this.running) {
-         String key = this.keyField.value();
-         this.config.set(Config.KEY, key);
-         this.config.save();
          this.begin("Запуск");
-         new Pipeline(this.config, this.sink(true)).start(key);
+         new Pipeline(this.config, this.sink(true)).start();
       }
    }
 
@@ -315,7 +314,7 @@ public final class Loader {
       if (!this.running) {
          this.begin("Установка");
          this.log.add("Установка без запуска игры.", Theme.MUTED);
-         new Pipeline(this.config, this.sink(false)).start(this.keyField.value());
+         new Pipeline(this.config, this.sink(false)).start();
       }
    }
 
@@ -372,19 +371,13 @@ public final class Loader {
       };
    }
 
-   private void refreshStatus() {
-      boolean online = !this.config.get(Config.API, "").isEmpty();
-      this.status.set(online ? "СЕРВЕР ЛИЦЕНЗИЙ" : "ОФЛАЙН-РЕЖИМ", online ? Theme.OK : Theme.WARN);
-   }
-
-   private void browse(Widgets.Field field, boolean directory) {
+   private void browse(Widgets.Field field) {
       JFileChooser chooser = new JFileChooser();
-      chooser.setFileSelectionMode(directory ? JFileChooser.DIRECTORIES_ONLY : JFileChooser.FILES_ONLY);
-      chooser.setDialogTitle(directory ? "Папка Minecraft" : "Джарник клиента");
+      chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+      chooser.setDialogTitle("Джарник клиента");
       String current = field.value();
       if (!current.isEmpty()) {
-         File file = new File(current);
-         chooser.setCurrentDirectory(directory ? file : file.getParentFile());
+         chooser.setCurrentDirectory(new File(current).getParentFile());
       }
 
       if (chooser.showOpenDialog(this.frame) == JFileChooser.APPROVE_OPTION) {

@@ -2,21 +2,15 @@ package wild.loader;
 
 import java.awt.Color;
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
-/** The launch sequence: verify the key, install the mod, start the game. Runs off the UI thread. */
+/** The launch sequence: pull the build from GitHub, install the mod, start the game. Runs off the UI thread. */
 final class Pipeline {
    private static final String MINECRAFT_VERSION = "1.21.8";
 
@@ -36,28 +30,22 @@ final class Pipeline {
       this.sink = sink;
    }
 
-   void start(String key) {
-      Thread thread = new Thread(() -> this.run(key), "loader-pipeline");
+   void start() {
+      Thread thread = new Thread(this::run, "loader-pipeline");
       thread.setDaemon(true);
       thread.start();
    }
 
-   private void run(String key) {
+   private void run() {
       try {
-         this.sink.progress(0.06, "Проверка ключа");
-         if (!this.verifyKey(key)) {
-            this.sink.finished(false, "Ключ не принят");
-            return;
-         }
-
-         this.sink.progress(0.28, "Поиск Minecraft");
-         Path minecraft = this.locateMinecraft();
+         this.sink.progress(0.10, "Папка игры");
+         Path minecraft = this.prepareMinecraft();
          if (minecraft == null) {
-            this.sink.finished(false, "Папка Minecraft не найдена");
+            this.sink.finished(false, "Нет доступа к папке игры");
             return;
          }
 
-         this.sink.progress(0.40, "Проверка Fabric");
+         this.sink.progress(0.30, "Проверка Fabric");
          this.checkFabric(minecraft);
          if (this.config.getBoolean(Config.AUTO_INSTALL, true)) {
             Path build = this.obtainBuild();
@@ -85,56 +73,20 @@ final class Pipeline {
       }
    }
 
-   private boolean verifyKey(String key) {
-      if (key == null || key.isBlank()) {
-         this.error("Введите лицензионный ключ.");
-         return false;
-      }
-
-      String api = this.config.get(Config.API, "");
-      if (api.isEmpty()) {
-         this.warn("Сервер лицензий не настроен — офлайн-режим.");
-         this.ok("Ключ принят локально (" + mask(key) + ").");
-         return true;
-      }
-
-      this.info("Запрос к серверу лицензий…");
-
-      try {
-         String payload = "{\"key\":\"" + escape(key) + "\",\"hwid\":\"" + Config.hardwareId() + "\"}";
-         HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(8L)).build();
-         HttpRequest request = HttpRequest.newBuilder(URI.create(api))
-            .timeout(Duration.ofSeconds(12L))
-            .header("Content-Type", "application/json")
-            .header("User-Agent", "WildLoader")
-            .POST(HttpRequest.BodyPublishers.ofString(payload, StandardCharsets.UTF_8))
-            .build();
-         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-         String body = response.body() == null ? "" : response.body();
-         if (response.statusCode() >= 200 && response.statusCode() < 300 && body.contains("\"ok\":true")) {
-            this.ok("Ключ подтверждён" + owner(body) + ".");
-            return true;
-         } else {
-            this.error("Сервер отклонил ключ (HTTP " + response.statusCode() + ").");
-            return false;
-         }
-      } catch (Exception exception2) {
-         this.error("Сервер лицензий недоступен: " + describe(exception2));
-         return false;
-      }
-   }
-
-   private Path locateMinecraft() {
+   /** The game folder is figured out automatically; the setting is only a manual override. */
+   private Path prepareMinecraft() {
       String configured = this.config.get(Config.MC_DIR, "");
       Path directory = configured.isEmpty() ? Config.defaultMinecraftDir() : Paths.get(configured);
-      if (Files.isDirectory(directory)) {
-         this.ok("Minecraft: " + directory);
+
+      try {
+         Files.createDirectories(directory.resolve("mods"));
+         this.ok("Папка игры: " + directory);
          return directory;
-      } else {
-         this.error("Нет папки " + directory);
+      } catch (IOException exception2) {
+         this.error("Не удалось подготовить " + directory + ": " + describe(exception2));
          return null;
       }
-    }
+   }
 
    private void checkFabric(Path minecraft) {
       Path versions = minecraft.resolve("versions");
@@ -364,26 +316,6 @@ final class Pipeline {
       }
 
       return null;
-   }
-
-   private static String owner(String body) {
-      int index = body.indexOf("\"user\"");
-      if (index < 0) {
-         return "";
-      } else {
-         int start = body.indexOf('"', body.indexOf(':', index) + 1);
-         int end = start < 0 ? -1 : body.indexOf('"', start + 1);
-         return start < 0 || end < 0 ? "" : " — " + body.substring(start + 1, end);
-      }
-   }
-
-   private static String mask(String key) {
-      String trimmed = key.trim();
-      return trimmed.length() <= 4 ? "****" : trimmed.substring(0, 2) + "••••" + trimmed.substring(trimmed.length() - 2);
-   }
-
-   private static String escape(String value) {
-      return value.replace("\\", "\\\\").replace("\"", "\\\"");
    }
 
    private static String describe(Throwable throwable) {
