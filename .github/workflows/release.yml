@@ -1,0 +1,57 @@
+name: Сборка клиента
+
+# Каждый пуш в main пересобирает клиент и обновляет релиз "latest",
+# из которого загрузчик тянет свежий джарник.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Gradle кэш
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('**/*.gradle', 'gradle.properties', 'gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+
+      - name: Собрать
+        run: |
+          chmod +x gradlew
+          ./gradlew build --no-daemon --stacktrace
+
+      - name: Найти джарник
+        id: jar
+        run: |
+          jar=$(ls build/libs/*.jar | grep -v -- '-sources\.jar' | grep -v -- '-dev\.jar' | head -n 1)
+          if [ -z "$jar" ]; then
+            echo "В build/libs нет джарника"
+            exit 1
+          fi
+          echo "path=$jar" >> "$GITHUB_OUTPUT"
+          echo "Собрано: $jar"
+
+      - name: Обновить релиз latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest "${{ steps.jar.outputs.path }}" \
+            --title "Последняя сборка" \
+            --notes "Автоматическая сборка коммита ${GITHUB_SHA::7}."

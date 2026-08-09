@@ -1,0 +1,20 @@
+# Gradle
+.gradle/
+build/
+
+# Среда разработки
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Дев-окружение игры (миры, логи, настройки)
+run/
+
+# Сборка загрузчика
+loader/out/
+loader/*.jar
+
+# Система
+Thumbs.db
+.DS_Store

@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "wild",
+  "version": "${version}",
+  "name": "low free",
+  "description": "low free client.",
+  "authors": [
+    "NONE"
+  ],
+  "contact": {
+    "homepage": "",
+    "issues": ""
+  },
+  "license": "MIT",
+  "icon": "assets/wild/ico.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "ru.metaculture.protection.WildClient"
+    ]
+  },
+  "mixins": [
+    "wild_mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.18.4",
+    "fabric": "*",
+    "minecraft": "~1.21.8"
+  },
+  "custom": {
+    "modmenu": {
+      "links": {
+      }
+    }
+  }
+}

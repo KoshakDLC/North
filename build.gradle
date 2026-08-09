@@ -1,0 +1,80 @@
+plugins {
+	id 'fabric-loom' version "${loom_version}"
+	id 'java'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
+
+repositories {
+	mavenCentral()
+	maven { url = 'https://maven.fabricmc.net/' }
+	maven { url = 'https://api.modrinth.com/maven' }        // baritone / other mods, if resolvable
+	maven { url = 'https://maven.meteordev.org/releases' }  // baritone (meteor fork), if needed
+	// The 7 libraries bundled inside the original client.jar (META-INF/jars) live here as local files.
+	flatDir { dirs 'libs' }
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	// --- Libraries bundled in the original jar (META-INF/jars) ---
+	// Provided on the compile/runtime classpath from libs/. These are plain libraries, so `implementation`.
+	implementation files('libs/Java-WebSocket-1.5.6.jar')
+	implementation files('libs/javassist-3.29.2-GA.jar')
+	implementation files('libs/json-20230618.jar')
+	implementation files('libs/reflections-0.10.2.jar')
+	implementation files('libs/netty-codec-socks-4.1.101.Final.jar')
+	implementation files('libs/netty-handler-proxy-4.1.101.Final.jar')
+
+	// Baritone is itself a Fabric mod (intermediary-named) — remap it so its yarn-named API is on the
+	// classpath and its mixins load under runClient.
+	modImplementation files('libs/baritone-1.21.8-SNAPSHOT.jar')
+	// nether-pathfinder is baritone's nested JiJ dependency (elytra pathfinding native). In a dev run
+	// the nested jar isn't auto-extracted, so provide it explicitly; it self-extracts its native from
+	// natives.zip.xz at runtime.
+	implementation files('libs/nether-pathfinder-1.4.1.jar')
+
+	// Decompiled sources still carry lombok @Generated annotations (bodies are already expanded).
+	// compileOnly is enough to satisfy the imports.
+	compileOnly 'org.projectlombok:lombok:1.18.34'
+}
+
+processResources {
+	inputs.property "version", project.version
+	filesMatching("fabric.mod.json") {
+		expand "version": inputs.properties.version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 21
+	it.options.encoding = 'UTF-8'
+	// Decompiled code can trip strict checks; keep the compiler lenient so best-effort builds proceed.
+	it.options.compilerArgs += ['-Xlint:none', '-nowarn', '-Xmaxerrs', '2000']
+}
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}
+
+loom {
+	mixin {
+		// Loom 1.17 disabled the mixin annotation processor by default. The decompiled sources ARE
+		// mixins whose @Inject/@Shadow refs are now Yarn-named, so we need the AP to regenerate a
+		// matching refmap for runClient. Keep the original refmap filename for consistency.
+		useLegacyMixinAp = true
+		defaultRefmapName = 'wild-refmap.json'
+	}
+}
