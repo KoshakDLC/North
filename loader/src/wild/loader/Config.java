@@ -22,6 +22,9 @@ final class Config {
    static final String LAUNCH_CMD = "launch.command";
    static final String CLOSE_ON_LAUNCH = "close.on.launch";
    static final String AUTO_INSTALL = "auto.install";
+   static final String LICENSE_KEY = "license.key";
+   static final String LICENSE_URL = "license.url";
+   static final String LICENSE_BYPASS = "license.bypass";
 
    private final Path file;
    private final Properties properties = new Properties();

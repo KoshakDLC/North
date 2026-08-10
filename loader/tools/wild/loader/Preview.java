@@ -50,8 +50,8 @@ public final class Preview {
                begin.invoke(loader, "Запуск");
                Pipeline.Sink sink = (Pipeline.Sink)sinkMethod.invoke(loader, false);
                sink.log("Папка игры: C:\\Users\\lowfi\\AppData\\Roaming\\.minecraft", Theme.OK);
-               sink.log("Репозиторий: KoshakDLC/North", Theme.MUTED);
-               sink.log("Новая сборка v1.4 — north-v1.4.jar (4.2 МБ)", Theme.MUTED);
+               sink.log("Проверяю обновления сборки…", Theme.MUTED);
+               sink.log("Новая сборка — north-v1.4.jar (4.2 МБ)", Theme.MUTED);
                sink.log("Скачано north-v1.4.jar (4.2 МБ).", Theme.OK);
                sink.log("Установлен north-v1.4.jar (4.2 МБ).", Theme.OK);
                sink.log("Fabric 0.19.3 готов.", Theme.OK);

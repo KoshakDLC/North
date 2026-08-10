@@ -18,6 +18,10 @@ final class Json {
    }
 
    static Object parse(String text) {
+      if (text != null && !text.isEmpty() && text.charAt(0) == '\uFEFF') {
+         text = text.substring(1);
+      }
+
       Json reader = new Json(text);
       reader.space();
       Object value = reader.value();

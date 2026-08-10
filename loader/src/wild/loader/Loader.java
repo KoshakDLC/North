@@ -40,7 +40,10 @@ public final class Loader {
    private final Widgets.Log log = new Widgets.Log();
    private final Widgets.Progress progress = new Widgets.Progress();
    private Widgets.Btn launchButton;
+   private Widgets.Field licenseField;
+   private Widgets.Btn activateButton;
    private String stage = "Готов к запуску";
+   private String licenseLabel = "Лицензия не проверена";
    private int active = -1;
    private boolean running;
 
@@ -89,6 +92,7 @@ public final class Loader {
       this.frame.setVisible(true);
       this.log.add("Загрузчик готов. Версия " + VERSION + " для Minecraft " + GAME_VERSION + ".", Theme.MUTED);
       this.log.add("Папка игры: " + this.gameDir(), Theme.MUTED);
+      this.refreshLicense(false);
    }
 
    private static int contentWidth() {
@@ -136,86 +140,89 @@ public final class Loader {
          protected void paintComponent(Graphics g) {
             Graphics2D g2 = Theme.hq(g);
             Theme.text(g2, "С возвращением", 0.0, 30.0, Theme.font(Font.BOLD, 25.0F), Theme.TEXT);
-            Theme.text(g2, "Одна кнопка: поставим игру с Fabric, свежую сборку и запустим.", 0.0, 52.0, Theme.font(Font.PLAIN, 13.0F), Theme.MUTED);
-            Theme.glass(g2, 0.0, 76.0, this.getWidth(), 118.0, 16.0, 1.0);
-            Theme.text(g2, "ИСТОЧНИК СБОРКИ", 22.0, 108.0, Theme.font(Font.BOLD, 10.5F), Theme.FAINT);
-            Font repoFont = Theme.font(Font.BOLD, 16.0F);
-            String repo = Loader.this.config.get(Config.REPO, Config.DEFAULT_REPO);
-            Theme.text(g2, Theme.ellipsize(g2, repo, repoFont, this.getWidth() - 280.0), 22.0, 134.0, repoFont, Theme.TEXT);
-            String summary = "Minecraft " + GAME_VERSION + " · Fabric · ник " + Loader.this.config.nickname();
-            Theme.text(g2, summary, 22.0, 158.0, Theme.font(Font.PLAIN, 12.5F), Theme.MUTED);
+            Theme.text(g2, "Активируй ключ, поставим игру с Fabric и запустим.", 0.0, 52.0, Theme.font(Font.PLAIN, 13.0F), Theme.MUTED);
+            Theme.glass(g2, 0.0, 76.0, this.getWidth(), 168.0, 16.0, 1.0);
+            Theme.text(g2, "ЛИЦЕНЗИЯ", 22.0, 100.0, Theme.font(Font.BOLD, 10.5F), Theme.FAINT);
+            Font statusFont = Theme.font(Font.BOLD, 14.0F);
+            Theme.text(g2, Theme.ellipsize(g2, Loader.this.licenseLabel, statusFont, this.getWidth() - 260.0), 22.0, 124.0, statusFont, Theme.TEXT);
+            String summary = "Minecraft " + GAME_VERSION + " · Fabric · ник " + Loader.this.config.nickname() + " · HWID " + Config.hardwareId();
+            Theme.text(g2, Theme.ellipsize(g2, summary, Theme.font(Font.PLAIN, 12.0F), this.getWidth() - 260.0), 22.0, 146.0, Theme.font(Font.PLAIN, 12.0F), Theme.MUTED);
             Font stageFont = Theme.font(Font.BOLD, 12.0F);
-            Theme.text(g2, Loader.this.stage, 2.0, 262.0, stageFont, Theme.mix(Theme.MUTED, Theme.TEXT, 0.5));
+            Theme.text(g2, Loader.this.stage, 2.0, 312.0, stageFont, Theme.mix(Theme.MUTED, Theme.TEXT, 0.5));
             String percent = Math.round(Loader.this.progressValue() * 100.0) + "%";
-            Theme.text(g2, percent, this.getWidth() - Theme.width(g2, percent, stageFont) - 2.0, 262.0, stageFont, Theme.MUTED);
-            Theme.text(g2, "ЖУРНАЛ", 2.0, 306.0, Theme.font(Font.BOLD, 10.5F), Theme.FAINT);
+            Theme.text(g2, percent, this.getWidth() - Theme.width(g2, percent, stageFont) - 2.0, 312.0, stageFont, Theme.MUTED);
+            Theme.text(g2, "ЖУРНАЛ", 2.0, 356.0, Theme.font(Font.BOLD, 10.5F), Theme.FAINT);
             g2.dispose();
          }
       };
       this.launchButton = new Widgets.Btn("ЗАПУСТИТЬ", true, this::launch);
       this.launchButton.setBounds(contentWidth() - 222, 112, 202, 46);
       page.add(this.launchButton);
+      this.licenseField = new Widgets.Field("Ключ лицензии", "XXXX-XXXX-XXXX-XXXX");
+      this.licenseField.value(this.config.get(Config.LICENSE_KEY, ""));
+      this.licenseField.setBounds(20, 160, contentWidth() - 250, 68);
+      page.add(this.licenseField);
+      this.activateButton = new Widgets.Btn("Активировать", false, this::activateLicense);
+      this.activateButton.setBounds(contentWidth() - 222, 176, 202, 36);
+      page.add(this.activateButton);
       Widgets.Btn install = new Widgets.Btn("Только установить", false, this::installOnly);
-      install.setBounds(0, 200, 176, 34);
+      install.setBounds(0, 254, 176, 34);
       page.add(install);
-      this.progress.setBounds(0, 272, contentWidth(), 8);
+      this.progress.setBounds(0, 322, contentWidth(), 8);
       page.add(this.progress);
-      this.log.setBounds(0, 316, contentWidth(), contentHeight() - 316);
+      this.log.setBounds(0, 366, contentWidth(), contentHeight() - 366);
       page.add(this.log);
       return page;
    }
 
    private JComponent buildSettings() {
       Loader.Page page = new Loader.Page();
-      Widgets.Card source = new Widgets.Card("Источник клиента");
-      source.setBounds(0, 0, contentWidth(), 204);
-      Widgets.Field repo = new Widgets.Field("Репозиторий с релизами", Config.DEFAULT_REPO);
-      repo.value(this.config.get(Config.REPO, Config.DEFAULT_REPO));
-      repo.setBounds(20, 40, contentWidth() - 40, 68);
-      bindSave(repo, Config.REPO, this.config, () -> this.pages[0].repaint());
-      source.add(repo);
-      Widgets.Field jar = new Widgets.Field("Свой джарник", "пусто — берём с GitHub");
+      Widgets.Card license = new Widgets.Card("Сервер лицензий");
+      license.setBounds(0, 0, contentWidth(), 128);
+      Widgets.Field licenseUrl = new Widgets.Field("Адрес API", License.DEFAULT_URL);
+      licenseUrl.value(this.config.get(Config.LICENSE_URL, License.DEFAULT_URL));
+      licenseUrl.setBounds(20, 40, contentWidth() - 40, 68);
+      bindSave(licenseUrl, Config.LICENSE_URL, this.config);
+      license.add(licenseUrl);
+      page.add(license);
+      Widgets.Card source = new Widgets.Card("Клиент");
+      source.setBounds(0, 140, contentWidth(), 120);
+      Widgets.Field jar = new Widgets.Field("Свой джарник", "пусто — скачиваем сборку автоматически");
       jar.value(this.config.get(Config.JAR, ""));
-      jar.setBounds(20, 118, contentWidth() - 40, 68);
+      jar.setBounds(20, 36, contentWidth() - 40, 68);
       jar.setTrailing("Обзор", () -> this.browse(jar));
       bindSave(jar, Config.JAR, this.config);
       source.add(jar);
       page.add(source);
       Widgets.Card options = new Widgets.Card("Игра");
-      options.setBounds(0, 216, contentWidth(), 262);
+      options.setBounds(0, 272, contentWidth(), 210);
       Widgets.Field nickname = new Widgets.Field("Ник в игре", Config.sanitizeNickname(System.getProperty("user.name", "")));
       nickname.value(this.config.get(Config.NICK, ""));
-      nickname.setBounds(20, 38, contentWidth() - 40, 68);
+      nickname.setBounds(20, 32, contentWidth() - 40, 58);
       bindSave(nickname, Config.NICK, this.config, () -> this.pages[0].repaint());
       options.add(nickname);
       Widgets.Slider ram = new Widgets.Slider("Память для игры", " ГБ", 2, 16, 1, this.config.getInt(Config.RAM, 4));
-      ram.setBounds(20, 120, contentWidth() - 40, 40);
+      ram.setBounds(20, 96, contentWidth() - 40, 36);
       ram.onChange(() -> {
          this.config.set(Config.RAM, Integer.toString(ram.value()));
          this.config.save();
       });
       options.add(ram);
       Widgets.Toggle autoInstall = new Widgets.Toggle("Обновлять клиент при запуске", "Копирует свежий джарник в mods", this.config.getBoolean(Config.AUTO_INSTALL, true));
-      autoInstall.setBounds(20, 170, contentWidth() - 40, 40);
+      autoInstall.setBounds(20, 136, contentWidth() - 40, 32);
       autoInstall.onChange(() -> {
          this.config.setBoolean(Config.AUTO_INSTALL, autoInstall.value());
          this.config.save();
       });
       options.add(autoInstall);
       Widgets.Toggle closeOnLaunch = new Widgets.Toggle("Закрывать загрузчик после старта", "Через пару секунд после запуска игры", this.config.getBoolean(Config.CLOSE_ON_LAUNCH, false));
-      closeOnLaunch.setBounds(20, 212, contentWidth() - 40, 40);
+      closeOnLaunch.setBounds(20, 168, contentWidth() - 40, 32);
       closeOnLaunch.onChange(() -> {
          this.config.setBoolean(Config.CLOSE_ON_LAUNCH, closeOnLaunch.value());
          this.config.save();
       });
       options.add(closeOnLaunch);
       page.add(options);
-      Widgets.Btn gameFolder = new Widgets.Btn("Открыть папку игры", false, () -> this.open(this.gameDir()));
-      gameFolder.setBounds(0, 492, 204, 36);
-      page.add(gameFolder);
-      Widgets.Btn cacheFolder = new Widgets.Btn("Открыть папку загрузок", false, () -> this.open(Config.cacheDir()));
-      cacheFolder.setBounds(216, 492, 224, 36);
-      page.add(cacheFolder);
       return page;
    }
 
@@ -262,7 +269,7 @@ public final class Loader {
             Theme.glass(g2, 0.0, 226.0, this.getWidth(), cardHeight, 16.0, 1.0);
             Theme.text(g2, "ЧТО ПРОИСХОДИТ ПРИ ЗАПУСКЕ", 28.0, 258.0, Theme.font(Font.BOLD, 11.0F), Theme.MUTED);
             String[] steps = {
-               "Свежая сборка с GitHub уезжает в mods",
+               "Свежая сборка клиента уезжает в mods",
                "Minecraft " + GAME_VERSION + ", ресурсы и библиотеки",
                "Fabric, Fabric API и своя Java — ставим сами",
                "Запуск игры без лаунчера Mojang"
@@ -324,11 +331,57 @@ public final class Loader {
       }
    }
 
+   private void activateLicense() {
+      if (this.running) {
+         return;
+      }
+
+      String key = this.licenseField.value().trim();
+      this.config.set(Config.LICENSE_KEY, key);
+      this.config.save();
+      this.activateButton.setEnabledState(false);
+      this.activateButton.setBusy(true);
+      this.log.add("Активация ключа…", Theme.MUTED);
+      Thread thread = new Thread(() -> {
+         License.Status status = License.activate(this.config, key);
+         SwingUtilities.invokeLater(() -> {
+            this.activateButton.setBusy(false);
+            this.activateButton.setEnabledState(true);
+            this.applyLicense(status, true);
+         });
+      }, "license-activate");
+      thread.setDaemon(true);
+      thread.start();
+   }
+
+   private void refreshLicense(boolean log) {
+      this.applyLicense(License.status(this.config), log);
+   }
+
+   private void applyLicense(License.Status status, boolean log) {
+      this.licenseLabel = status.valid()
+         ? status.message() + " · " + status.username() + " #" + status.uid()
+         : status.message();
+      if (log) {
+         this.log.add(this.licenseLabel, status.valid() ? Theme.OK : Theme.BAD);
+      }
+
+      if (this.pages[0] != null) {
+         this.pages[0].repaint();
+      }
+
+      this.root.repaint();
+   }
+
    private void begin(String title) {
       this.running = true;
       this.launchButton.setEnabledState(false);
       this.launchButton.setBusy(true);
       this.launchButton.setText(title.toUpperCase());
+      if (this.activateButton != null) {
+         this.activateButton.setEnabledState(false);
+      }
+
       this.progress.reset();
       this.select(0);
    }
@@ -357,7 +410,12 @@ public final class Loader {
                Loader.this.launchButton.setBusy(false);
                Loader.this.launchButton.setEnabledState(true);
                Loader.this.launchButton.setText("ЗАПУСТИТЬ");
+               if (Loader.this.activateButton != null) {
+                  Loader.this.activateButton.setEnabledState(true);
+               }
+
                Loader.this.stage = message;
+               Loader.this.refreshLicense(false);
                if (!success) {
                   Loader.this.progressFraction = 0.0;
                   Loader.this.progress.set(0.0, false);

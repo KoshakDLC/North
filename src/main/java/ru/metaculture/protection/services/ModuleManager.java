@@ -14,6 +14,12 @@ public class ModuleManager {
    public final ArrayList<Module> modules = new ArrayList<>();
 
    public ModuleManager() {
+      if (!LocalLicenseService.check()) {
+         org.apache.logging.log4j.LogManager.getLogger("North")
+            .error("License gate: modules disabled");
+         return;
+      }
+
       this.registerModules();
    }
 

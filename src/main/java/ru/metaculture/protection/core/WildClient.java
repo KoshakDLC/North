@@ -151,6 +151,15 @@ public class WildClient implements ClientModInitializer {
    @NotCompile
    public void onInitializeClient() {
       INSTANCE = this;
+      Profile.loadFromLicense();
+      if (!LocalLicenseService.check()) {
+         org.apache.logging.log4j.LogManager.getLogger("North")
+            .error("Лицензия недействительна — активируй ключ в NorthLoader.");
+         this.moduleManager = new ModuleManager();
+         return;
+      }
+
+      OnlineLicenseGuard.start();
       invoke6(this::invoke3);
       invoke6(StardustParticleRegistry::invoke);
       invoke6(this::invoke9);

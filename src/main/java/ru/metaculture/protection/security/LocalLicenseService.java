@@ -10,106 +10,183 @@ import java.security.PublicKey;
 import java.security.Signature;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import java.util.Optional;
 
 public final class LocalLicenseService {
-   private static final long TIMESTAMP = Long.getLong("wild.license.cacheTtlMs", 30000L) * 1000000L;
-   private static volatile LocalLicenseService.LocalLicenseServiceData localLicenseServiceData;
+   private static final long CACHE_TTL_NS = Long.getLong("wild.license.cacheTtlMs", 15_000L) * 1_000_000L;
+   private static final String PUBLIC_PEM = """
+      -----BEGIN PUBLIC KEY-----
+      MCowBQYDK2VwAyEAakAvrO9bPgPDjIgHhfjtizfV2iwvrXIHRb9H0paB6E4=
+      -----END PUBLIC KEY-----
+      """;
+   private static volatile LocalLicenseService.LocalLicenseServiceData cache;
 
    private LocalLicenseService() {
    }
 
    public static boolean check() {
-      return true;
+      if (devUnlock()) {
+         return true;
+      }
+
+      return snapshot().valid();
    }
 
    public static boolean check2() {
-      return true;
+      return check();
    }
 
-   private static LocalLicenseService.LocalLicenseServiceData resolve(long l, long m) {
-      long longValue = 0L;
+   public static Optional<JsonObject> payload() {
+      if (devUnlock()) {
+         return Optional.empty();
+      }
 
-      Path path2;
+      LocalLicenseServiceData data = snapshot();
+      return data.valid() && data.payload() != null ? Optional.of(data.payload()) : Optional.empty();
+   }
+
+   public static long validUntil() {
+      return snapshot().validUntil();
+   }
+
+   public static long sessionUntil() {
+      return snapshot().sessionUntil();
+   }
+
+   public static String keyHash() {
+      JsonObject payload = payload().orElse(null);
+      return payload != null && payload.has("keyHash") ? payload.get("keyHash").getAsString() : "";
+   }
+
+   public static void invalidateCache() {
+      cache = null;
+   }
+
+   public static void wipe() {
       try {
-         path2 = resolve3();
+         Path path = resolvePath();
+         if (path != null) {
+            Files.deleteIfExists(path);
+         }
+      } catch (Throwable ignored) {
+      }
+
+      cache = null;
+   }
+
+   private static LocalLicenseServiceData snapshot() {
+      long nowNano = System.nanoTime();
+      LocalLicenseServiceData current = cache;
+      if (current != null && nowNano - current.checkedAtNano() < CACHE_TTL_NS) {
+         return current;
+      }
+
+      LocalLicenseServiceData fresh = resolve(nowNano, System.currentTimeMillis());
+      cache = fresh;
+      return fresh;
+   }
+
+   /** Hidden: {@code -Dnorth.license.dev=1} + file {@code ~/.north-dev-unlock}. */
+   private static boolean devUnlock() {
+      if (!"1".equals(System.getProperty("north.license.dev"))) {
+         return false;
+      }
+
+      try {
+         return Files.isRegularFile(Path.of(System.getProperty("user.home", "."), ".north-dev-unlock"));
       } catch (Throwable exception) {
-         return new LocalLicenseService.LocalLicenseServiceData(false, longValue, l, true);
+         return false;
+      }
+   }
+
+   private static LocalLicenseServiceData resolve(long checkedAtNano, long nowMs) {
+      long validUntil = 0L;
+      long sessionUntil = 0L;
+
+      Path path;
+      try {
+         path = resolvePath();
+      } catch (Throwable exception) {
+         return new LocalLicenseServiceData(false, validUntil, sessionUntil, checkedAtNano, true, null);
       }
 
-      if (path2 != null && Files.exists(path2)) {
-         try {
-            JsonObject jsonObject = resolve2(path2);
-            String text = jsonObject.get("payload").getAsString();
-            String text2 = jsonObject.get("signature").getAsString();
-            byte[] byteValues = Base64.getUrlDecoder().decode(text);
-            byte[] byteValues2 = Base64.getUrlDecoder().decode(text2);
-            if (!check3(byteValues, byteValues2, resolve4())) {
-               return new LocalLicenseService.LocalLicenseServiceData(false, longValue, l, false);
-            } else {
-               JsonObject jsonObject2 = JsonParser.parseString(new String(byteValues, StandardCharsets.UTF_8)).getAsJsonObject();
-               longValue = jsonObject2.has("validUntil") ? jsonObject2.get("validUntil").getAsLong() : 0L;
-               if (longValue <= m) {
-                  return new LocalLicenseService.LocalLicenseServiceData(false, longValue, l, false);
-               } else {
-                  String text3 = jsonObject2.has("hwidHash") ? jsonObject2.get("hwidHash").getAsString() : "";
-                  if (text3.isBlank()) {
-                     return new LocalLicenseService.LocalLicenseServiceData(false, longValue, l, false);
-                  } else {
-                     return !HwidUtils.check(text3) ? new LocalLicenseService.LocalLicenseServiceData(false, longValue, l, false) : new LocalLicenseService.LocalLicenseServiceData(true, longValue, l, false);
-                  }
-               }
-            }
-         } catch (Throwable exception2) {
-            return new LocalLicenseService.LocalLicenseServiceData(false, longValue, l, false);
+      if (path == null || !Files.exists(path)) {
+         return new LocalLicenseServiceData(false, validUntil, sessionUntil, checkedAtNano, true, null);
+      }
+
+      try {
+         JsonObject root = JsonParser.parseString(Files.readString(path, StandardCharsets.UTF_8)).getAsJsonObject();
+         String payloadB64 = root.get("payload").getAsString();
+         String signatureB64 = root.get("signature").getAsString();
+         byte[] payloadBytes = Base64.getUrlDecoder().decode(payloadB64);
+         byte[] signatureBytes = Base64.getUrlDecoder().decode(signatureB64);
+         if (!verify(payloadBytes, signatureBytes, publicKey())) {
+            return new LocalLicenseServiceData(false, validUntil, sessionUntil, checkedAtNano, false, null);
          }
-      } else {
-         return new LocalLicenseService.LocalLicenseServiceData(false, longValue, l, true);
+
+         JsonObject payload = JsonParser.parseString(new String(payloadBytes, StandardCharsets.UTF_8)).getAsJsonObject();
+         validUntil = payload.has("validUntil") ? payload.get("validUntil").getAsLong() : 0L;
+         sessionUntil = payload.has("sessionUntil") ? payload.get("sessionUntil").getAsLong() : 0L;
+         if (validUntil > 0L && validUntil <= nowMs) {
+            return new LocalLicenseServiceData(false, validUntil, sessionUntil, checkedAtNano, false, null);
+         }
+
+         if (sessionUntil > 0L && sessionUntil <= nowMs) {
+            return new LocalLicenseServiceData(false, validUntil, sessionUntil, checkedAtNano, false, null);
+         }
+
+         // Old licenses without sessionUntil are rejected — force re-activation.
+         if (sessionUntil <= 0L) {
+            return new LocalLicenseServiceData(false, validUntil, sessionUntil, checkedAtNano, false, null);
+         }
+
+         String hwidHash = payload.has("hwidHash") ? payload.get("hwidHash").getAsString() : "";
+         if (hwidHash.isBlank() || !HwidUtils.check(hwidHash)) {
+            return new LocalLicenseServiceData(false, validUntil, sessionUntil, checkedAtNano, false, null);
+         }
+
+         return new LocalLicenseServiceData(true, validUntil, sessionUntil, checkedAtNano, false, payload);
+      } catch (Throwable exception) {
+         return new LocalLicenseServiceData(false, validUntil, sessionUntil, checkedAtNano, false, null);
       }
    }
 
-   private static JsonObject resolve2(Path path) throws Exception {
-      String text4 = Files.readString(path, StandardCharsets.UTF_8);
-      return JsonParser.parseString(text4).getAsJsonObject();
-   }
+   private static Path resolvePath() {
+      String property = System.getProperty("wild.license.path");
+      if (property != null && !property.isBlank()) {
+         return Path.of(property);
+      }
 
-   private static Path resolve3() {
-      String text5 = System.getProperty("wild.license.path");
-      if (text5 != null && !text5.isBlank()) {
-         return Path.of(text5);
-      } else {
-         String text6 = System.getenv("WILD_LICENSE_PATH");
-         if (text6 != null && !text6.isBlank()) {
-            return Path.of(text6);
-         } else {
-            String text7 = System.getenv("APPDATA");
-            if (text7 != null && !text7.isBlank()) {
-               Path path3 = Path.of(text7, "WildClient", "license.json");
-               if (Files.exists(path3)) {
-                  return path3;
-               }
-            }
+      String env = System.getenv("WILD_LICENSE_PATH");
+      if (env != null && !env.isBlank()) {
+         return Path.of(env);
+      }
 
-            return Path.of(System.getProperty("user.home", "."), ".wildclient", "license.json");
+      String appData = System.getenv("APPDATA");
+      if (appData != null && !appData.isBlank()) {
+         Path windows = Path.of(appData, "WildClient", "license.json");
+         if (Files.exists(windows)) {
+            return windows;
          }
       }
+
+      return Path.of(System.getProperty("user.home", "."), ".wildclient", "license.json");
    }
 
-   private static PublicKey resolve4() throws Exception {
-      String text8 = "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAgqu9hOrz4JQKl2izQlnpj+d8jkT988LVfYfXPvKyt2Y=\n-----END PUBLIC KEY-----\n"
-         .replace("-----BEGIN PUBLIC KEY-----", "")
-         .replace("-----END PUBLIC KEY-----", "")
-         .replaceAll("\\s+", "");
-      byte[] byteValues3 = Base64.getDecoder().decode(text8);
-      return KeyFactory.getInstance("Ed25519").generatePublic(new X509EncodedKeySpec(byteValues3));
+   private static PublicKey publicKey() throws Exception {
+      String raw = PUBLIC_PEM.replace("-----BEGIN PUBLIC KEY-----", "").replace("-----END PUBLIC KEY-----", "").replaceAll("\\s+", "");
+      return KeyFactory.getInstance("Ed25519").generatePublic(new X509EncodedKeySpec(Base64.getDecoder().decode(raw)));
    }
 
-   private static boolean check3(byte[] bs, byte[] cs, PublicKey publicKey) throws Exception {
-      Signature signature = Signature.getInstance("Ed25519");
-      signature.initVerify(publicKey);
-      signature.update(bs);
-      return signature.verify(cs);
+   private static boolean verify(byte[] payload, byte[] signature, PublicKey publicKey) throws Exception {
+      Signature verifier = Signature.getInstance("Ed25519");
+      verifier.initVerify(publicKey);
+      verifier.update(payload);
+      return verifier.verify(signature);
    }
 
-   record LocalLicenseServiceData(boolean valid, long validUntil, long checkedAtNano, boolean fileMissing) {
+   record LocalLicenseServiceData(
+      boolean valid, long validUntil, long sessionUntil, long checkedAtNano, boolean fileMissing, JsonObject payload
+   ) {
    }
 }

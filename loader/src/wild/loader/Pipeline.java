@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * The launch sequence: pull the build from GitHub, put it in {@code mods}, install Minecraft with
+ * The launch sequence: pull the latest build, put it in {@code mods}, install Minecraft with
  * Fabric and a matching Java, then start the game. Runs off the UI thread.
  */
 final class Pipeline {
@@ -45,6 +45,15 @@ final class Pipeline {
 
    private void run() {
       try {
+         this.sink.progress(0.02, "Проверка лицензии");
+         License.Status license = License.ensure(this.config);
+         if (!license.valid()) {
+            this.error(license.message());
+            this.sink.finished(false, "Нужен ключ");
+            return;
+         }
+
+         this.ok("Лицензия: " + license.message() + " · " + license.username());
          this.sink.progress(0.04, "Папка игры");
          Path minecraft = this.prepareMinecraft();
          if (minecraft == null) {
@@ -136,7 +145,7 @@ final class Pipeline {
 
    /**
     * Finds the build to install. A path set by hand wins, then a direct link, then the latest
-    * GitHub release; a local gradle output is only used as a last resort on a dev machine.
+    * published release; a local gradle output is only used as a last resort on a dev machine.
     */
    private Path obtainBuild() {
       String local = this.config.get(Config.JAR, "");
@@ -158,22 +167,22 @@ final class Pipeline {
       String repository = this.config.get(Config.REPO, Config.DEFAULT_REPO);
       if (!repository.isEmpty()) {
          this.sink.progress(0.08, "Проверка обновлений");
-         this.info("Репозиторий: " + repository);
+         this.info("Проверяю обновления сборки…");
 
          try {
             Downloader.Asset asset = Downloader.latestRelease(repository);
             if (asset == null) {
-               this.warn("В релизах " + repository + " нет джарника.");
+               this.warn("В обновлениях нет джарника.");
             } else {
                // Tag is often always "latest", so fold the size into the cache path —
                // otherwise a rebuilt release with the same tag can keep serving a stale jar.
                Path cached = Config.cacheDir().resolve(asset.safeTag() + "-" + asset.size()).resolve(asset.name());
                if (Files.isRegularFile(cached) && sizeOf(cached) == asset.size()) {
-                  this.ok("Сборка " + asset.tag() + " уже скачана.");
+                  this.ok("Сборка уже скачана.");
                   return cached;
                }
 
-               this.info("Новая сборка " + asset.tag() + " — " + asset.name() + " (" + Downloader.humanSize(asset.size()) + ")");
+               this.info("Новая сборка — " + asset.name() + " (" + Downloader.humanSize(asset.size()) + ")");
                return this.fetch(asset.url(), cached, asset.size());
             }
          } catch (InterruptedException exception9) {
@@ -181,7 +190,7 @@ final class Pipeline {
             this.error("Загрузка прервана.");
             return null;
          } catch (Exception exception10) {
-            this.error("GitHub недоступен: " + describe(exception10));
+            this.error("Сервер обновлений недоступен: " + describe(exception10));
          }
       }
 
@@ -191,7 +200,7 @@ final class Pipeline {
          return built;
       }
 
-      this.error("Сборку взять неоткуда — проверь репозиторий в настройках.");
+      this.error("Сборку взять неоткуда — укажи свой джарник в настройках.");
       return null;
    }
 
@@ -285,7 +294,11 @@ final class Pipeline {
       String nickname = this.config.nickname();
       int memory = Math.max(2, this.config.getInt(Config.RAM, 4));
       this.info("Игрок " + nickname + ", памяти " + memory + " ГБ.");
-      return this.spawn(game.command(nickname, memory), game.root());
+      List<String> command = game.command(nickname, memory);
+      String licenseUrl = this.config.get(Config.LICENSE_URL, License.DEFAULT_URL);
+      command.add(1, "-Dwild.license.path=" + License.path().toAbsolutePath());
+      command.add(1, "-Dwild.license.url=" + licenseUrl);
+      return this.spawn(command, game.root());
    }
 
    private boolean spawn(List<String> command, Path workingDirectory) {
@@ -302,6 +315,8 @@ final class Pipeline {
             builder.directory(workingDirectory.toFile());
          }
 
+         builder.environment().put("WILD_LICENSE_PATH", License.path().toAbsolutePath().toString());
+         builder.environment().put("WILD_LICENSE_URL", this.config.get(Config.LICENSE_URL, License.DEFAULT_URL));
          builder.redirectErrorStream(true);
          builder.redirectOutput(ProcessBuilder.Redirect.to(log.toFile()));
          this.watch(builder.start(), log);
