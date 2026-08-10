@@ -31,8 +31,14 @@ run.bat
 ## Выдача ключей
 
 ```bat
-run.bat create --count 5 --days 90 --role MEDIA --devices 1 --prefix North
+run.bat create --count 1 --days 7
+run.bat create --count 1 --days 30
+run.bat create --count 1 --days 180
+run.bat create --count 1 --days 0
+run.bat create --count 1 --lifetime true
 ```
+
+`--days 0` или `--lifetime true` — бессрочный ключ (`validUntil = 0`).
 
 Или через API:
 

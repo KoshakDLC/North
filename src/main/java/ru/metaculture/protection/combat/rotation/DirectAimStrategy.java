@@ -10,19 +10,30 @@ public class DirectAimStrategy implements MinecraftAccessor {
    public static void invoke(LivingEntity livingEntity, CameraRotationEvent cameraRotationEvent) {
       if (livingEntity != null && a_.player != null && a_.world != null) {
          Vec3d vec3d = livingEntity.getPos()
-            .add(0.0, MathHelper.clamp(a_.player.getEyePos().y - livingEntity.getY(), 0.0, 1.0), 0.0)
+            .add(0.0, MathHelper.clamp(a_.player.getEyePos().y - livingEntity.getY(), 0.0, livingEntity.getHeight()), 0.0)
             .subtract(a_.player.getEyePos())
             .normalize();
          float floatValue = (float)Math.toDegrees(Math.atan2(-vec3d.x, vec3d.z));
-         float floatValue2 = a_.player.getYaw();
-         float floatValue3 = MathHelper.wrapDegrees(floatValue - floatValue2);
-         float floatValue4 = MathHelper.clamp(AttackAura.skorostLegit.getValue(), 0.02F, 0.4F);
-         float floatValue5 = measure();
-         float floatValue6 = 1.0F - (float)Math.pow(1.0F - floatValue4, floatValue5);
-         float floatValue7 = floatValue2 + floatValue3 * floatValue6;
-         a_.player.setYaw(floatValue7);
-         a_.player.headYaw = floatValue7;
-         cameraRotationEvent.setFloatValue(floatValue7);
+         float floatValue2 = (float)MathHelper.clamp(-Math.toDegrees(Math.atan2(vec3d.y, Math.hypot(vec3d.x, vec3d.z))), -90.0, 90.0);
+         if (AttackAura.lipnutKIgroku.isEnabled()) {
+            a_.player.setYaw(floatValue);
+            a_.player.setPitch(floatValue2);
+            a_.player.headYaw = floatValue;
+            a_.player.bodyYaw = floatValue;
+            cameraRotationEvent.setFloatValue(floatValue);
+            cameraRotationEvent.setFloatValue2(floatValue2);
+            return;
+         }
+
+         float floatValue3 = a_.player.getYaw();
+         float floatValue4 = MathHelper.wrapDegrees(floatValue - floatValue3);
+         float floatValue5 = MathHelper.clamp(AttackAura.skorostLegit.getValue(), 0.02F, 0.4F);
+         float floatValue6 = measure();
+         float floatValue7 = 1.0F - (float)Math.pow(1.0F - floatValue5, floatValue6);
+         float floatValue8 = floatValue3 + floatValue4 * floatValue7;
+         a_.player.setYaw(floatValue8);
+         a_.player.headYaw = floatValue8;
+         cameraRotationEvent.setFloatValue(floatValue8);
       }
    }
 

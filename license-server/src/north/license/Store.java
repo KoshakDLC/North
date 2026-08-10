@@ -16,19 +16,47 @@ final class Store {
    private final Path file;
    private final Object lock = new Object();
    private final Map<String, KeyRecord> byHash = new LinkedHashMap<>();
+   private long loadedModified = Long.MIN_VALUE;
 
    Store(Path file) throws Exception {
       this.file = file;
       this.load();
    }
 
+   /** Pick up keys created by another process (CLI) without restarting the HTTP server. */
+   void reloadIfChanged() throws Exception {
+      synchronized (this.lock) {
+         this.reloadUnlocked();
+      }
+   }
+
+   private void reloadUnlocked() throws Exception {
+      long modified = Files.isRegularFile(this.file) ? Files.getLastModifiedTime(this.file).toMillis() : -1L;
+      if (modified != this.loadedModified) {
+         this.byHash.clear();
+         this.load();
+      }
+   }
+
+   private int nextUidUnlocked() {
+      int max = 1000;
+      for (KeyRecord record : this.byHash.values()) {
+         if (record.uid > max) {
+            max = record.uid;
+         }
+      }
+
+      return max + 1;
+   }
+
    List<String> createKeys(int count, long validUntilMs, String role, String usernamePrefix, int maxDevices) throws Exception {
       List<String> created = new ArrayList<>();
       synchronized (this.lock) {
+         this.reloadUnlocked();
          for (int i = 0; i < count; i++) {
             String key = generateKey();
             String hash = Crypto.sha256Hex(normalize(key));
-            int uid = 1000 + this.byHash.size() + 1;
+            int uid = nextUidUnlocked();
             String username = usernamePrefix == null || usernamePrefix.isBlank() ? "User" + uid : usernamePrefix + uid;
             this.byHash.put(hash, new KeyRecord(hash, validUntilMs, role.toUpperCase(Locale.ROOT), username, uid, maxDevices, new ArrayList<>(), false));
             created.add(key);
@@ -47,6 +75,7 @@ final class Store {
 
       String hash = Crypto.sha256Hex(normalize(rawKey));
       synchronized (this.lock) {
+         this.reloadUnlocked();
          KeyRecord record = this.byHash.get(hash);
          if (record == null) {
             return ActivationResult.error("Ключ не найден");
@@ -78,6 +107,7 @@ final class Store {
    boolean revoke(String rawKey) throws Exception {
       String hash = Crypto.sha256Hex(normalize(rawKey));
       synchronized (this.lock) {
+         this.reloadUnlocked();
          KeyRecord record = this.byHash.get(hash);
          if (record == null) {
             return false;
@@ -90,12 +120,13 @@ final class Store {
    }
 
    /** Online check used by loader/client so a revoked key dies even with a local license file. */
-   ActivationResult validate(String keyHash, String hwid) {
+   ActivationResult validate(String keyHash, String hwid) throws Exception {
       if (keyHash == null || keyHash.isBlank() || hwid == null || hwid.isBlank()) {
          return ActivationResult.error("Нет данных лицензии");
       }
 
       synchronized (this.lock) {
+         this.reloadUnlocked();
          KeyRecord record = this.byHash.get(keyHash.trim().toLowerCase(Locale.ROOT));
          if (record == null) {
             // accept raw hex as stored
@@ -126,16 +157,23 @@ final class Store {
 
    int size() {
       synchronized (this.lock) {
+         try {
+            this.reloadUnlocked();
+         } catch (Exception ignored) {
+         }
+
          return this.byHash.size();
       }
    }
 
    private void load() throws Exception {
       if (!Files.isRegularFile(this.file)) {
+         this.loadedModified = -1L;
          return;
       }
 
       String text = Files.readString(this.file, StandardCharsets.UTF_8).trim();
+      this.loadedModified = Files.getLastModifiedTime(this.file).toMillis();
       if (text.isEmpty()) {
          return;
       }
@@ -167,6 +205,7 @@ final class Store {
 
       builder.append("\n  ]\n}\n");
       Files.writeString(this.file, builder.toString(), StandardCharsets.UTF_8);
+      this.loadedModified = Files.getLastModifiedTime(this.file).toMillis();
    }
 
    private static String normalize(String key) {

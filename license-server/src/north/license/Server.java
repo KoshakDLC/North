@@ -61,9 +61,14 @@ public final class Server {
          int days = argInt(args, "--days", 30);
          int maxDevices = argInt(args, "--devices", 1);
          String role = argText(args, "--role", "USER");
-         long until = Instant.now().plusSeconds(Math.max(1, days) * 86400L).toEpochMilli();
+         boolean lifetime = days <= 0 || "true".equalsIgnoreCase(argText(args, "--lifetime", "false"));
+         long until = lifetime ? 0L : Instant.now().plusSeconds(days * 86400L).toEpochMilli();
          List<String> keys = store.createKeys(count, until, role, argText(args, "--prefix", "User"), maxDevices);
-         System.out.println("Created " + keys.size() + " key(s), valid " + days + " day(s), role " + role + ":");
+         if (lifetime) {
+            System.out.println("Created " + keys.size() + " key(s), lifetime, role " + role + ":");
+         } else {
+            System.out.println("Created " + keys.size() + " key(s), valid " + days + " day(s), role " + role + ":");
+         }
          for (String key : keys) {
             System.out.println("  " + key);
          }
@@ -178,11 +183,12 @@ public final class Server {
       try {
          Map<String, Object> body = MiniJson.object(MiniJson.parse(readBody(exchange)));
          int count = (int)Math.max(1L, MiniJson.number(body.get("count"), 1L));
-         int days = (int)Math.max(1L, MiniJson.number(body.get("days"), 30L));
+         int days = (int)MiniJson.number(body.get("days"), 30L);
          int maxDevices = (int)Math.max(1L, MiniJson.number(body.get("maxDevices"), 1L));
          String role = MiniJson.text(body.get("role"), "USER");
          String prefix = MiniJson.text(body.get("prefix"), "User");
-         long until = Instant.now().plusSeconds(days * 86400L).toEpochMilli();
+         boolean lifetime = days <= 0 || MiniJson.flag(body.get("lifetime"), false);
+         long until = lifetime ? 0L : Instant.now().plusSeconds(Math.max(1, days) * 86400L).toEpochMilli();
          List<String> keys = this.store.createKeys(count, until, role, prefix, maxDevices);
          StringBuilder builder = new StringBuilder("{\"ok\":true,\"validUntil\":" + until + ",\"keys\":[");
          for (int i = 0; i < keys.size(); i++) {

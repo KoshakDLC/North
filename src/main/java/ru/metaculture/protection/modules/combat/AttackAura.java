@@ -58,8 +58,9 @@ public class AttackAura extends Module {
       .setVisibilityCondition(() -> !rezhimRotatsii.is("Snap") && !rezhimRotatsii.is("FOV"));
    public static NumberSetting fov = new NumberSetting("FOV", 90.0F, 5.0F, 180.0F, 1.0F, true).setVisibilityCondition(() -> !rezhimRotatsii.is("FOV"));
    public static BooleanSetting otobrazhatFov = new BooleanSetting("Отображать FOV", true).visibleWhen(() -> !rezhimRotatsii.is("FOV"));
+   public static BooleanSetting lipnutKIgroku = new BooleanSetting("Липнуть к игроку", false).visibleWhen(() -> !rezhimRotatsii.is("Legit"));
    public static NumberSetting skorostLegit = new NumberSetting("Скорость Legit", 0.08F, 0.02F, 0.4F, 0.01F, false)
-      .setVisibilityCondition(() -> !rezhimRotatsii.is("Legit"));
+      .setVisibilityCondition(() -> !rezhimRotatsii.is("Legit") || lipnutKIgroku.isEnabled());
    public static BooleanSetting sidepointExtraChecks = new BooleanSetting("SidePoint Extra Checks", false).visibleWhen(() -> !rezhimRotatsii.is("Side Point"));
    public static DynamicButtonSetting neuroStatus = new DynamicButtonSetting("Neuro Status", 0, NeuroRotationController::resolve)
       .setVisibilityCondition(() -> !rezhimRotatsii.is("Neuro") || !check());
@@ -178,6 +179,7 @@ public class AttackAura extends Module {
             rezhimSnapa,
             fov,
             otobrazhatFov,
+            lipnutKIgroku,
             skorostLegit,
             neuroStatus,
             neuroDebug,
