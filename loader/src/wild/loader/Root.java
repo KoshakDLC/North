@@ -21,7 +21,7 @@ final class Root extends JPanel {
    private static final int DOWNSCALE = 4;
    private static final Color BLOB_A = Theme.ACCENT;
    private static final Color BLOB_B = Theme.ACCENT_2;
-   private static final Color BLOB_C = new Color(0xFF, 0x6B, 0xD6);
+   private static final Color BLOB_C = new Color(0xB0, 0x0A, 0x1E);
    private BufferedImage buffer;
    private int frame;
 

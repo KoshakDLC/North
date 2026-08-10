@@ -2,6 +2,7 @@ package wild.loader;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -9,10 +10,14 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-/** The launch sequence: pull the build from GitHub, install the mod, start the game. Runs off the UI thread. */
+/**
+ * The launch sequence: pull the build from GitHub, put it in {@code mods}, install Minecraft with
+ * Fabric and a matching Java, then start the game. Runs off the UI thread.
+ */
 final class Pipeline {
-   private static final String MINECRAFT_VERSION = "1.21.8";
+   static final String MINECRAFT_VERSION = "1.21.8";
 
    interface Sink {
       void log(String message, Color color);
@@ -24,10 +29,12 @@ final class Pipeline {
 
    private final Config config;
    private final Pipeline.Sink sink;
+   private final boolean play;
 
-   Pipeline(Config config, Pipeline.Sink sink) {
+   Pipeline(Config config, Pipeline.Sink sink, boolean play) {
       this.config = config;
       this.sink = sink;
+      this.play = play;
    }
 
    void start() {
@@ -38,15 +45,13 @@ final class Pipeline {
 
    private void run() {
       try {
-         this.sink.progress(0.10, "Папка игры");
+         this.sink.progress(0.04, "Папка игры");
          Path minecraft = this.prepareMinecraft();
          if (minecraft == null) {
             this.sink.finished(false, "Нет доступа к папке игры");
             return;
          }
 
-         this.sink.progress(0.30, "Проверка Fabric");
-         this.checkFabric(minecraft);
          if (this.config.getBoolean(Config.AUTO_INSTALL, true)) {
             Path build = this.obtainBuild();
             if (build == null) {
@@ -54,23 +59,64 @@ final class Pipeline {
                return;
             }
 
-            this.sink.progress(0.84, "Установка клиента");
+            this.sink.progress(0.26, "Установка клиента");
             if (!this.install(minecraft, build)) {
                this.sink.finished(false, "Не удалось установить клиент");
                return;
             }
          } else {
-            this.info("Установка пропущена (выключена в настройках).");
+            this.info("Обновление сборки выключено в настройках.");
          }
 
-         this.sink.progress(0.90, "Запуск игры");
-         this.launch(minecraft);
+         Game game = new Game(minecraft, MINECRAFT_VERSION, this.report());
+         game.install();
+         if (!this.play) {
+            this.sink.progress(1.0, "Готово");
+            this.sink.finished(true, "Всё установлено");
+            return;
+         }
+
+         this.sink.progress(0.96, "Запуск игры");
+         if (!this.launch(game)) {
+            this.sink.finished(false, "Игра не запустилась");
+            return;
+         }
+
          this.sink.progress(1.0, "Готово");
-         this.sink.finished(true, "Клиент готов к работе");
+         this.sink.finished(true, "Игра запущена");
+      } catch (InterruptedException interruption) {
+         Thread.currentThread().interrupt();
+         this.error("Запуск прерван.");
+         this.sink.finished(false, "Прервано");
       } catch (Throwable exception) {
          this.error("Сбой: " + describe(exception));
          this.sink.finished(false, "Сбой запуска");
       }
+   }
+
+   /** Passes the install steps of {@link Game} through to the interface. */
+   private Game.Report report() {
+      return new Game.Report() {
+         @Override
+         public void info(String message) {
+            Pipeline.this.info(message);
+         }
+
+         @Override
+         public void ok(String message) {
+            Pipeline.this.ok(message);
+         }
+
+         @Override
+         public void warn(String message) {
+            Pipeline.this.warn(message);
+         }
+
+         @Override
+         public void step(double fraction, String stage) {
+            Pipeline.this.sink.progress(fraction, stage);
+         }
+      };
    }
 
    /** The game folder is figured out automatically; the setting is only a manual override. */
@@ -85,28 +131,6 @@ final class Pipeline {
       } catch (IOException exception2) {
          this.error("Не удалось подготовить " + directory + ": " + describe(exception2));
          return null;
-      }
-   }
-
-   private void checkFabric(Path minecraft) {
-      Path versions = minecraft.resolve("versions");
-      List<String> found = new ArrayList<>();
-      if (Files.isDirectory(versions)) {
-         try (DirectoryStream<Path> stream = Files.newDirectoryStream(versions)) {
-            for (Path candidate : stream) {
-               String name = candidate.getFileName().toString().toLowerCase();
-               if (name.contains("fabric") && name.contains(MINECRAFT_VERSION)) {
-                  found.add(candidate.getFileName().toString());
-               }
-            }
-         } catch (IOException exception3) {
-         }
-      }
-
-      if (found.isEmpty()) {
-         this.warn("Fabric для " + MINECRAFT_VERSION + " не найден — поставь его перед запуском.");
-      } else {
-         this.ok("Fabric: " + found.get(0));
       }
    }
 
@@ -133,7 +157,7 @@ final class Pipeline {
 
       String repository = this.config.get(Config.REPO, Config.DEFAULT_REPO);
       if (!repository.isEmpty()) {
-         this.sink.progress(0.48, "Проверка обновлений");
+         this.sink.progress(0.08, "Проверка обновлений");
          this.info("Репозиторий: " + repository);
 
          try {
@@ -170,7 +194,7 @@ final class Pipeline {
    }
 
    private Path fetch(String url, Path target, long expected) {
-      this.sink.progress(0.52, "Загрузка клиента");
+      this.sink.progress(0.12, "Загрузка клиента");
 
       try {
          // Чанки приходят по 64 КБ, поэтому прогресс шлём реже, чтобы не заваливать поток интерфейса.
@@ -179,7 +203,7 @@ final class Pipeline {
             long size = total > 0L ? total : expected;
             if (size > 0L && done - reported[0] >= 262144L) {
                reported[0] = done;
-               this.sink.progress(0.52 + 0.28 * Math.min(1.0, (double)done / size), "Загрузка клиента");
+               this.sink.progress(0.12 + 0.12 * Math.min(1.0, (double)done / size), "Загрузка клиента");
             }
          });
          this.ok("Скачано " + target.getFileName() + " (" + Downloader.humanSize(sizeOf(target)) + ").");
@@ -248,38 +272,36 @@ final class Pipeline {
       }
    }
 
-   private void launch(Path minecraft) {
-      String command = this.config.get(Config.LAUNCH_CMD, "");
-      if (!command.isEmpty()) {
-         this.info("Запуск: " + command);
-         if (this.spawn(shell(command), minecraft)) {
-            this.ok("Команда запуска выполнена.");
-         }
-
-         return;
+   private boolean launch(Game game) throws IOException {
+      String custom = this.config.get(Config.LAUNCH_CMD, "");
+      if (!custom.isEmpty()) {
+         this.info("Своя команда запуска: " + custom);
+         return this.spawn(shell(custom), game.root());
       }
 
-      Path launcher = this.findLauncher();
-      if (launcher == null) {
-         this.warn("Лаунчер не найден — открой его сам и выбери профиль Fabric " + MINECRAFT_VERSION + ".");
-      } else {
-         this.info("Запуск " + launcher.getFileName());
-         if (this.spawn(List.of(launcher.toString()), minecraft)) {
-            this.ok("Лаунчер запущен, выбери профиль Fabric " + MINECRAFT_VERSION + ".");
-         }
-      }
+      String nickname = this.config.nickname();
+      int memory = Math.max(2, this.config.getInt(Config.RAM, 4));
+      this.info("Игрок " + nickname + ", памяти " + memory + " ГБ.");
+      return this.spawn(game.command(nickname, memory), game.root());
    }
 
    private boolean spawn(List<String> command, Path workingDirectory) {
+      Path log = Config.gameLog();
+
       try {
+         Path parent = log.getParent();
+         if (parent != null) {
+            Files.createDirectories(parent);
+         }
+
          ProcessBuilder builder = new ProcessBuilder(command);
          if (Files.isDirectory(workingDirectory)) {
             builder.directory(workingDirectory.toFile());
          }
 
          builder.redirectErrorStream(true);
-         builder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
-         builder.start();
+         builder.redirectOutput(ProcessBuilder.Redirect.to(log.toFile()));
+         this.watch(builder.start(), log);
          return true;
       } catch (IOException exception7) {
          this.error("Не удалось запустить: " + describe(exception7));
@@ -287,35 +309,43 @@ final class Pipeline {
       }
    }
 
+   /**
+    * A crash during startup would otherwise look like a successful launch: the loader says "готово"
+    * while nothing opens. Watching the process for a while turns that into a readable message.
+    */
+   private void watch(Process process, Path log) {
+      Thread thread = new Thread(() -> {
+         try {
+            if (process.waitFor(25L, TimeUnit.SECONDS) && process.exitValue() != 0) {
+               this.error("Игра закрылась с кодом " + process.exitValue() + ". Лог: " + log);
+
+               for (String line : tail(log, 6)) {
+                  this.warn("  " + line);
+               }
+            }
+         } catch (InterruptedException interruption) {
+            Thread.currentThread().interrupt();
+         }
+      }, "loader-watch");
+      thread.setDaemon(true);
+      thread.start();
+   }
+
+   private static List<String> tail(Path file, int count) {
+      try {
+         // Игра пишет лог в кодировке системы, поэтому читаем байтами: строгий декодер тут упал бы.
+         List<String> lines = new ArrayList<>(new String(Files.readAllBytes(file), StandardCharsets.UTF_8).lines().toList());
+         lines.removeIf(String::isBlank);
+         return lines.subList(Math.max(0, lines.size() - count), lines.size());
+      } catch (Exception exception8) {
+         return List.of();
+      }
+   }
+
    private static List<String> shell(String command) {
       return System.getProperty("os.name", "").toLowerCase().contains("win")
          ? List.of("cmd.exe", "/c", command)
          : List.of("/bin/sh", "-c", command);
-   }
-
-   private Path findLauncher() {
-      List<String> candidates = new ArrayList<>();
-      String programFiles = System.getenv("ProgramFiles(x86)");
-      String programFiles64 = System.getenv("ProgramFiles");
-      if (programFiles != null) {
-         candidates.add(programFiles + "\\Minecraft Launcher\\MinecraftLauncher.exe");
-      }
-
-      if (programFiles64 != null) {
-         candidates.add(programFiles64 + "\\Minecraft Launcher\\MinecraftLauncher.exe");
-         candidates.add(programFiles64 + "\\Minecraft\\MinecraftLauncher.exe");
-      }
-
-      candidates.add("/usr/bin/minecraft-launcher");
-
-      for (String candidate : candidates) {
-         Path path = Paths.get(candidate);
-         if (Files.isRegularFile(path)) {
-            return path;
-         }
-      }
-
-      return null;
    }
 
    private static String describe(Throwable throwable) {

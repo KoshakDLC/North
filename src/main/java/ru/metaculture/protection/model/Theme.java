@@ -4,7 +4,7 @@ import java.awt.Color;
 import lombok.Generated;
 
 public enum Theme {
-   WILD("low free", new Color(6061311), new Color(658192), new Color(1119002), new Color(1974835), new Color(16777215), new Color(9344166)),
+   WILD("low free", new Color(16719647), new Color(1182219), new Color(1708050), new Color(3021599), new Color(16777215), new Color(10915474)),
    CHERRY("Cherry", new Color(16731501), new Color(1182219), new Color(1708050), new Color(3021599), new Color(16777215), new Color(10915474)),
    SUN("Sun", new Color(16758531), new Color(1183754), new Color(1709840), new Color(3024923), new Color(16777215), new Color(10920078)),
    MINT("Mint", new Color(62932), new Color(594448), new Color(924183), new Color(1519144), new Color(16777215), new Color(9283231)),

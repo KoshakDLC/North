@@ -923,9 +923,6 @@ public final class ChinaHat extends Module {
             float floatValue79 = f * 0.0062F;
             this.intValue2 = ChinaHat.compute7(intValues, floatValue79);
             this.intValue = ChinaHat.compute5(ChinaHat.compute7(intValues, floatValue79 + 0.34F), 0.14F);
-         } else if (theme2 == Theme.WILD) {
-            this.intValue = 9348607;
-            this.intValue2 = 6061311;
          } else {
             int intValue64 = theme2.getColor().getRGB() & 16777215;
             this.intValue = ChinaHat.compute5(intValue64, 0.18F);

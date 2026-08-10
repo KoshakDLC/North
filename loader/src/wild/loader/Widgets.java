@@ -127,7 +127,7 @@ final class Widgets {
          }
 
          Font font = Theme.font(Font.BOLD, this.primary ? 14.5F : 13.0F);
-         Color color = this.primary ? Theme.alpha(new Color(0x14, 0x10, 0x24), fade) : Theme.alpha(Theme.mix(Theme.MUTED, Theme.TEXT, 0.35 + 0.65 * hover), fade);
+         Color color = this.primary ? Theme.alpha(new Color(0x18, 0x08, 0x08), fade) : Theme.alpha(Theme.mix(Theme.MUTED, Theme.TEXT, 0.35 + 0.65 * hover), fade);
          double textCenter = x + width / 2.0;
          if (this.busy) {
             double size = height * 0.34;
@@ -731,7 +731,7 @@ final class Widgets {
       }
    }
 
-   /** The "L" brand mark. */
+   /** Red Z brand mark. */
    static final class Brand extends JComponent {
       Brand() {
          Anim.tick(() -> {
@@ -746,12 +746,9 @@ final class Widgets {
          Graphics2D g2 = Theme.hq(g);
          double size = Math.min(this.getWidth(), this.getHeight());
          double pulse = 0.5 + 0.5 * Math.sin(Anim.time() * 1.1);
-         Theme.glow(g2, 0.0, 0.0, size, size, size * 0.31, Theme.ACCENT, 12, 0.45 + 0.25 * pulse);
-         Theme.fill(g2, 0.0, 0.0, size, size, size * 0.31, Theme.brand(0.0, size));
-         Theme.fill(g2, size * 0.12, 1.0, size * 0.76, size * 0.42, size * 0.2, Theme.alpha(Theme.WHITE, 0.18));
-         Theme.stroke(g2, 0.0, 0.0, size, size, size * 0.31, Theme.alpha(Theme.WHITE, 0.28), 1.0);
-         Font font = Theme.font(Font.BOLD, (float)(size * 0.56));
-         Theme.textCentered(g2, "L", size / 2.0, Theme.baseline(g2, 0.0, size, font), font, new Color(0x18, 0x12, 0x2C));
+         Theme.glow(g2, 0.0, 0.0, size, size, size * 0.31, Theme.ACCENT, 14, 0.55 + 0.30 * pulse);
+         Theme.paintLogo(g2, 0.0, 0.0, size);
+         Theme.stroke(g2, 0.0, 0.0, size, size, size * 0.31, Theme.alpha(Theme.WHITE, 0.22), 1.0);
          g2.dispose();
       }
    }

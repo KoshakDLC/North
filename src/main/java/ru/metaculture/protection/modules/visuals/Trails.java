@@ -722,7 +722,7 @@ public final class Trails extends Module implements ShaderBinding {
             this.ints = resolve(this.theme);
             this.floatValue = f * 0.06F;
             if (this.ints == null) {
-               this.intValue = this.theme == Theme.WILD ? 8108031 : this.theme.getColor().getRGB() & 16777215;
+               this.intValue = this.theme.getColor().getRGB() & 16777215;
             }
          }
       }

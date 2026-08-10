@@ -11,9 +11,13 @@ import java.awt.Paint;
 import java.awt.RenderingHints;
 import java.awt.BasicStroke;
 import java.awt.geom.RoundRectangle2D;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import javax.imageio.ImageIO;
 
 /** Colors, fonts and the Java2D helpers every widget in the loader paints with. */
 final class Theme {
@@ -22,8 +26,8 @@ final class Theme {
    static final Color TEXT = new Color(0xF3, 0xF3, 0xF8);
    static final Color MUTED = new Color(0x8C, 0x8C, 0xA3);
    static final Color FAINT = new Color(0x5E, 0x5E, 0x74);
-   static final Color ACCENT = new Color(0xA2, 0x86, 0xFF);
-   static final Color ACCENT_2 = new Color(0x6F, 0xE3, 0xFF);
+   static final Color ACCENT = new Color(0xFF, 0x1F, 0x1F);
+   static final Color ACCENT_2 = new Color(0xFF, 0x5A, 0x3C);
    static final Color OK = new Color(0x5B, 0xE3, 0x9B);
    static final Color WARN = new Color(0xFF, 0xC4, 0x6B);
    static final Color BAD = new Color(0xFF, 0x6B, 0x7A);
@@ -33,8 +37,37 @@ final class Theme {
    private static final String[] MONO_CANDIDATES = {"JetBrains Mono", "Cascadia Mono", "Consolas", "Monospaced"};
    private static String family;
    private static String monoFamily;
+   private static BufferedImage logo;
 
    private Theme() {
+   }
+
+   /** Brand mark from classpath (`logo.png` next to the Theme class). */
+   static BufferedImage logo() {
+      if (logo == null) {
+         URL url = Theme.class.getResource("logo.png");
+         if (url != null) {
+            try {
+               logo = ImageIO.read(url);
+            } catch (IOException ignored) {
+            }
+         }
+      }
+
+      return logo;
+   }
+
+   static void paintLogo(Graphics2D g, double x, double y, double size) {
+      BufferedImage image = logo();
+      if (image == null) {
+         fill(g, x, y, size, size, size * 0.31, brand(x, size));
+         return;
+      }
+
+      Graphics2D clip = (Graphics2D)g.create();
+      clip.clip(round(x, y, size, size, size * 0.31));
+      clip.drawImage(image, (int)Math.round(x), (int)Math.round(y), (int)Math.round(size), (int)Math.round(size), null);
+      clip.dispose();
    }
 
    static String family() {

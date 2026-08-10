@@ -136,13 +136,14 @@ public final class Loader {
          protected void paintComponent(Graphics g) {
             Graphics2D g2 = Theme.hq(g);
             Theme.text(g2, "С возвращением", 0.0, 30.0, Theme.font(Font.BOLD, 25.0F), Theme.TEXT);
-            Theme.text(g2, "Одна кнопка: скачаем свежую сборку и откроем игру.", 0.0, 52.0, Theme.font(Font.PLAIN, 13.0F), Theme.MUTED);
+            Theme.text(g2, "Одна кнопка: поставим игру с Fabric, свежую сборку и запустим.", 0.0, 52.0, Theme.font(Font.PLAIN, 13.0F), Theme.MUTED);
             Theme.glass(g2, 0.0, 76.0, this.getWidth(), 118.0, 16.0, 1.0);
             Theme.text(g2, "ИСТОЧНИК СБОРКИ", 22.0, 108.0, Theme.font(Font.BOLD, 10.5F), Theme.FAINT);
             Font repoFont = Theme.font(Font.BOLD, 16.0F);
             String repo = Loader.this.config.get(Config.REPO, Config.DEFAULT_REPO);
             Theme.text(g2, Theme.ellipsize(g2, repo, repoFont, this.getWidth() - 280.0), 22.0, 134.0, repoFont, Theme.TEXT);
-            Theme.text(g2, "Ставится в mods автоматически", 22.0, 158.0, Theme.font(Font.PLAIN, 12.5F), Theme.MUTED);
+            String summary = "Minecraft " + GAME_VERSION + " · Fabric · ник " + Loader.this.config.nickname();
+            Theme.text(g2, summary, 22.0, 158.0, Theme.font(Font.PLAIN, 12.5F), Theme.MUTED);
             Font stageFont = Theme.font(Font.BOLD, 12.0F);
             Theme.text(g2, Loader.this.stage, 2.0, 262.0, stageFont, Theme.mix(Theme.MUTED, Theme.TEXT, 0.5));
             String percent = Math.round(Loader.this.progressValue() * 100.0) + "%";
@@ -180,24 +181,29 @@ public final class Loader {
       bindSave(jar, Config.JAR, this.config);
       source.add(jar);
       page.add(source);
-      Widgets.Card options = new Widgets.Card("Параметры");
-      options.setBounds(0, 216, contentWidth(), 180);
+      Widgets.Card options = new Widgets.Card("Игра");
+      options.setBounds(0, 216, contentWidth(), 262);
+      Widgets.Field nickname = new Widgets.Field("Ник в игре", Config.sanitizeNickname(System.getProperty("user.name", "")));
+      nickname.value(this.config.get(Config.NICK, ""));
+      nickname.setBounds(20, 38, contentWidth() - 40, 68);
+      bindSave(nickname, Config.NICK, this.config, () -> this.pages[0].repaint());
+      options.add(nickname);
       Widgets.Slider ram = new Widgets.Slider("Память для игры", " ГБ", 2, 16, 1, this.config.getInt(Config.RAM, 4));
-      ram.setBounds(20, 38, contentWidth() - 40, 40);
+      ram.setBounds(20, 120, contentWidth() - 40, 40);
       ram.onChange(() -> {
          this.config.set(Config.RAM, Integer.toString(ram.value()));
          this.config.save();
       });
       options.add(ram);
       Widgets.Toggle autoInstall = new Widgets.Toggle("Обновлять клиент при запуске", "Копирует свежий джарник в mods", this.config.getBoolean(Config.AUTO_INSTALL, true));
-      autoInstall.setBounds(20, 88, contentWidth() - 40, 40);
+      autoInstall.setBounds(20, 170, contentWidth() - 40, 40);
       autoInstall.onChange(() -> {
          this.config.setBoolean(Config.AUTO_INSTALL, autoInstall.value());
          this.config.save();
       });
       options.add(autoInstall);
       Widgets.Toggle closeOnLaunch = new Widgets.Toggle("Закрывать загрузчик после старта", "Через пару секунд после запуска игры", this.config.getBoolean(Config.CLOSE_ON_LAUNCH, false));
-      closeOnLaunch.setBounds(20, 130, contentWidth() - 40, 40);
+      closeOnLaunch.setBounds(20, 212, contentWidth() - 40, 40);
       closeOnLaunch.onChange(() -> {
          this.config.setBoolean(Config.CLOSE_ON_LAUNCH, closeOnLaunch.value());
          this.config.save();
@@ -205,10 +211,10 @@ public final class Loader {
       options.add(closeOnLaunch);
       page.add(options);
       Widgets.Btn gameFolder = new Widgets.Btn("Открыть папку игры", false, () -> this.open(this.gameDir()));
-      gameFolder.setBounds(0, 412, 204, 36);
+      gameFolder.setBounds(0, 492, 204, 36);
       page.add(gameFolder);
       Widgets.Btn cacheFolder = new Widgets.Btn("Открыть папку загрузок", false, () -> this.open(Config.cacheDir()));
-      cacheFolder.setBounds(216, 412, 224, 36);
+      cacheFolder.setBounds(216, 492, 224, 36);
       page.add(cacheFolder);
       return page;
    }
@@ -239,8 +245,8 @@ public final class Loader {
             Theme.text(g2, VERSION + " · Minecraft " + GAME_VERSION + " · Fabric", 28.0, 80.0, Theme.font(Font.PLAIN, 13.0F), Theme.ACCENT);
             Font font = Theme.font(Font.PLAIN, 12.5F);
             String[] lines = {
-               "Загрузчик сам берёт свежую сборку с GitHub, кладёт её в mods",
-               "и открывает игру. Настраивать пути не нужно.",
+               "Загрузчик ставит саму игру, Fabric и Java, кладёт свежую сборку",
+               "в mods и запускает Minecraft. Официальный лаунчер не нужен.",
                "",
                "HWID: " + Config.hardwareId(),
                "Настройки: " + Config.appData().resolve("low free").resolve("loader.properties")
@@ -256,10 +262,10 @@ public final class Loader {
             Theme.glass(g2, 0.0, 226.0, this.getWidth(), cardHeight, 16.0, 1.0);
             Theme.text(g2, "ЧТО ПРОИСХОДИТ ПРИ ЗАПУСКЕ", 28.0, 258.0, Theme.font(Font.BOLD, 11.0F), Theme.MUTED);
             String[] steps = {
-               "Папка игры находится сама",
-               "Проверка установленного Fabric " + GAME_VERSION,
-               "Скачивание свежей сборки с GitHub",
-               "Установка джарника в mods и запуск игры"
+               "Свежая сборка с GitHub уезжает в mods",
+               "Minecraft " + GAME_VERSION + ", ресурсы и библиотеки",
+               "Fabric, Fabric API и своя Java — ставим сами",
+               "Запуск игры без лаунчера Mojang"
             };
             double spacing = Theme.clamp((cardHeight - 96.0) / steps.length, 38.0, 56.0);
             double stepY = 292.0;
@@ -306,7 +312,7 @@ public final class Loader {
    private void launch() {
       if (!this.running) {
          this.begin("Запуск");
-         new Pipeline(this.config, this.sink(true)).start();
+         new Pipeline(this.config, this.sink(true), true).start();
       }
    }
 
@@ -314,7 +320,7 @@ public final class Loader {
       if (!this.running) {
          this.begin("Установка");
          this.log.add("Установка без запуска игры.", Theme.MUTED);
-         new Pipeline(this.config, this.sink(false)).start();
+         new Pipeline(this.config, this.sink(false), false).start();
       }
    }
 
@@ -441,9 +447,7 @@ public final class Loader {
       int size = 128;
       BufferedImage image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
       Graphics2D g2 = Theme.hq(image.createGraphics());
-      Theme.fill(g2, 0.0, 0.0, size, size, size * 0.3, Theme.brand(0.0, size));
-      Font font = Theme.font(Font.BOLD, size * 0.58F);
-      Theme.textCentered(g2, "L", size / 2.0, Theme.baseline(g2, 0.0, size, font), font, new Color(0x18, 0x12, 0x2C));
+      Theme.paintLogo(g2, 0.0, 0.0, size);
       g2.dispose();
       return image;
    }

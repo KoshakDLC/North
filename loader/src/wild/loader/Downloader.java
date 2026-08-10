@@ -13,7 +13,14 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.security.MessageDigest;
 import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -82,6 +89,73 @@ final class Downloader {
       }
    }
 
+   /** Plain GET of a metadata document. */
+   static String text(String url) throws IOException, InterruptedException {
+      HttpRequest request = HttpRequest.newBuilder(URI.create(url))
+         .timeout(Duration.ofSeconds(30L))
+         .header("Accept", "application/json")
+         .header("User-Agent", "WildLoader")
+         .GET()
+         .build();
+      HttpResponse<String> response = CLIENT.send(request, BodyHandlers.ofString(StandardCharsets.UTF_8));
+      if (response.statusCode() < 200 || response.statusCode() >= 300) {
+         throw new IOException("HTTP " + response.statusCode() + " от " + url);
+      }
+
+      return response.body();
+   }
+
+   /**
+    * Downloads a file unless the copy on disk already matches. The hash is only checked when the
+    * metadata provides one; a matching size is enough for the rest, which keeps repeat launches fast.
+    */
+   static boolean fileIfMissing(String url, Path target, String sha1, long size) throws IOException, InterruptedException {
+      if (intact(target, sha1, size)) {
+         return false;
+      }
+
+      download(url, target, null);
+      return true;
+   }
+
+   static boolean intact(Path target, String sha1, long size) {
+      if (!Files.isRegularFile(target)) {
+         return false;
+      }
+
+      try {
+         if (size > 0L && Files.size(target) != size) {
+            return false;
+         }
+      } catch (IOException exception) {
+         return false;
+      }
+
+      return sha1 == null || sha1.isBlank() || sha1.equalsIgnoreCase(sha1(target));
+   }
+
+   static String sha1(Path file) {
+      try (InputStream stream = Files.newInputStream(file)) {
+         MessageDigest digest = MessageDigest.getInstance("SHA-1");
+         byte[] buffer = new byte[BUFFER];
+         int read;
+
+         while ((read = stream.read(buffer)) > 0) {
+            digest.update(buffer, 0, read);
+         }
+
+         StringBuilder builder = new StringBuilder();
+
+         for (byte value : digest.digest()) {
+            builder.append(String.format("%02x", value));
+         }
+
+         return builder.toString();
+      } catch (Exception exception) {
+         return "";
+      }
+   }
+
    /** Streams a file to disk, reporting progress. Writes to a temporary file first. */
    static void download(String url, Path target, Downloader.Progress progress) throws IOException, InterruptedException {
       Path parent = target.getParent();
@@ -119,6 +193,37 @@ final class Downloader {
       }
 
       Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
+   }
+
+   /**
+    * Runs downloads on a small pool. An asset index is thousands of tiny files, and fetching them
+    * one at a time takes minutes of pure latency.
+    */
+   static void parallel(List<Callable<Void>> tasks) throws IOException, InterruptedException {
+      if (tasks.isEmpty()) {
+         return;
+      }
+
+      ExecutorService pool = Executors.newFixedThreadPool(Math.min(16, Math.max(4, tasks.size())));
+
+      try {
+         List<Future<Void>> futures = pool.invokeAll(tasks);
+
+         for (Future<Void> future : futures) {
+            try {
+               future.get();
+            } catch (ExecutionException exception) {
+               Throwable cause = exception.getCause();
+               if (cause instanceof IOException failure) {
+                  throw failure;
+               }
+
+               throw new IOException(cause == null ? exception.toString() : cause.toString(), cause);
+            }
+         }
+      } finally {
+         pool.shutdownNow();
+      }
    }
 
    static String humanSize(long bytes) {

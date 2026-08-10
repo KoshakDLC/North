@@ -156,7 +156,7 @@ public final class ColorScheme {
       } else if (theme4 == Theme.FRUTIGER_AERO) {
          return -8657678;
       } else {
-         return theme4 == Theme.WILD ? -6375937 : compute12(theme4.getColor().getRGB(), 0.22F);
+         return compute12(theme4.getColor().getRGB(), 0.22F);
       }
    }
 
@@ -178,7 +178,7 @@ public final class ColorScheme {
       } else if (theme5 == Theme.FRUTIGER_AERO) {
          return -13722666;
       } else {
-         return theme5 == Theme.WILD ? -8216577 : compute6(theme5.getColor().getRGB(), 255);
+         return compute6(theme5.getColor().getRGB(), 255);
       }
    }
 

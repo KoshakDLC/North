@@ -50,7 +50,7 @@ public class JumpCircle extends Module {
             Theme theme = WildClient.INSTANCE != null && WildClient.INSTANCE.themeManager != null
                ? WildClient.INSTANCE.themeManager.getTheme()
                : Theme.WILD;
-            int intValue = theme == Theme.WILD ? 8108031 : theme.getColor().getRGB() & 16777215;
+            int intValue = theme.getColor().getRGB() & 16777215;
             int intValue2 = intValue >> 16 & 0xFF;
             int intValue3 = intValue >> 8 & 0xFF;
             int intValue4 = intValue & 0xFF;

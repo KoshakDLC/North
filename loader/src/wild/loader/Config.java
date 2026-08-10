@@ -18,6 +18,7 @@ final class Config {
    static final String CLIENT_URL = "client.url";
    static final String DEFAULT_REPO = "KoshakDLC/LowFree";
    static final String RAM = "memory.gb";
+   static final String NICK = "player.name";
    static final String LAUNCH_CMD = "launch.command";
    static final String CLOSE_ON_LAUNCH = "close.on.launch";
    static final String AUTO_INSTALL = "auto.install";
@@ -88,9 +89,44 @@ final class Config {
       this.set(key, Boolean.toString(value));
    }
 
+   /**
+    * The nickname for the offline session. Servers reject names with spaces or non-latin letters,
+    * so whatever is typed gets trimmed down to something a server accepts.
+    */
+   String nickname() {
+      String value = this.get(NICK, "");
+      return sanitizeNickname(value.isEmpty() ? System.getProperty("user.name", "") : value);
+   }
+
+   static String sanitizeNickname(String value) {
+      StringBuilder builder = new StringBuilder();
+
+      for (char character : value.toCharArray()) {
+         if (character == '_' || character < 128 && Character.isLetterOrDigit(character)) {
+            builder.append(character);
+         }
+      }
+
+      if (builder.length() < 3) {
+         return "Player";
+      }
+
+      return builder.length() > 16 ? builder.substring(0, 16) : builder.toString();
+   }
+
    /** Where downloaded builds are kept between launches. */
    static Path cacheDir() {
       return appData().resolve("low free").resolve("cache");
+   }
+
+   /** Java runtimes downloaded from Mojang; shared by every game version. */
+   static Path runtimeDir() {
+      return appData().resolve("low free").resolve("runtime");
+   }
+
+   /** Everything the launched game prints, so a crash on startup can be explained. */
+   static Path gameLog() {
+      return appData().resolve("low free").resolve("game.log");
    }
 
    static Path appData() {
