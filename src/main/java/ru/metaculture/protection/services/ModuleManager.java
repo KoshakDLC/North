@@ -46,7 +46,7 @@ public class ModuleManager {
          try {
             this.registerModule((Module)moduleClass.getDeclaredConstructor().newInstance());
          } catch (Throwable exception) {
-            System.out.println("[low free] module register failed: " + moduleClass.getSimpleName() + ": " + exception);
+            System.out.println("[North] module register failed: " + moduleClass.getSimpleName() + ": " + exception);
          }
       }
 

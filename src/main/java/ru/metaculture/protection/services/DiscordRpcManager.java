@@ -26,7 +26,7 @@ public class DiscordRpcManager implements MinecraftAccessor {
             thread = new Thread(() -> {
                while (!Thread.currentThread().isInterrupted()) {
                   discordRpcLibrary.Discord_RunCallbacks();
-                  discordRichPresence.details = "low free | Version: " + "1.21.8";
+                  discordRichPresence.details = "North | Version: " + "1.21.8";
                   discordRichPresence.state = "User: " + Profile.getUsername();
                   discordRichPresence.button_label_1 = "Telegram";
                   discordRichPresence.button_url_1 = "";

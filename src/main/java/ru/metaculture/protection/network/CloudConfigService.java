@@ -212,7 +212,7 @@ public final class CloudConfigService {
    }
 
    private static HttpRequest resolve10(URI uRI) {
-      return HttpRequest.newBuilder(uRI).timeout(DURATION_2).header("Accept", "application/json").header("User-Agent", "WildClient-CloudConfig").GET().build();
+      return HttpRequest.newBuilder(uRI).timeout(DURATION_2).header("Accept", "application/json").header("User-Agent", "NorthClient-CloudConfig").GET().build();
    }
 
    private static String resolve11() {

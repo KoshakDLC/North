@@ -8,7 +8,7 @@ public final class ModernClickGuiScreen extends Screen {
    private final ClickGui clickGui = new ClickGui();
 
    public ModernClickGuiScreen() {
-      super(Text.literal("low free"));
+      super(Text.literal("North"));
    }
 
    public ClickGui getClickGui() {

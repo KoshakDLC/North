@@ -35,7 +35,7 @@ public class WildClient implements ClientModInitializer {
          new File(net.fabricmc.loader.api.FabricLoader.getInstance().getGameDir().toFile(), "instance_files/wild").getPath()
       )
    );
-   public final String wild = "low free";
+   public final String wild = "North";
    public final String v1 = "v1";
    public final String text1218 = "1.21.8";
    public final File file = FILE;
@@ -425,7 +425,7 @@ public class WildClient implements ClientModInitializer {
    public static void invoke11() {
       if (!flag5) {
          flag5 = true;
-         System.out.println("[low free] shutdown: begin");
+         System.out.println("[North] shutdown: begin");
          invoke12();
          invoke6((Runnable)(() -> {
             if (INSTANCE != null && INSTANCE.configManager != null) {
@@ -461,7 +461,7 @@ public class WildClient implements ClientModInitializer {
          invoke6((Runnable)(() -> MotionBlurRenderer.getINSTANCE().close()));
          invoke6(ThemeShaderProgramCache.getINSTANCE()::invoke3);
          invoke6((Runnable)(() -> FramebufferPool.invoke2()));
-         System.out.println("[low free] shutdown: done");
+         System.out.println("[North] shutdown: done");
       }
    }
 
@@ -475,7 +475,7 @@ public class WildClient implements ClientModInitializer {
                Thread.currentThread().interrupt();
             }
 
-            System.out.println("[low free] shutdown: force-exit failsafe -> halt(0)");
+            System.out.println("[North] shutdown: force-exit failsafe -> halt(0)");
             Runtime.getRuntime();
             boolean flag = false;
          }, "Wild-ForceExit-Watchdog");
@@ -627,7 +627,7 @@ public class WildClient implements ClientModInitializer {
 
    @Generated
    public String resolve4() {
-      return "low free";
+      return "North";
    }
 
    @Generated

@@ -1,4 +1,4 @@
-# low free
+# North
 
 Клиент для Minecraft 1.21.8 на Fabric и загрузчик к нему.
 

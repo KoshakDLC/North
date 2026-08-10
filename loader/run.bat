@@ -11,7 +11,7 @@ if not defined JAVA_BIN (
   exit /b 1
 )
 
-if not exist low-free-loader.jar (
+if not exist north-loader.jar (
   call "%~dp0build.bat"
   if errorlevel 1 (
     pause
@@ -21,10 +21,10 @@ if not exist low-free-loader.jar (
 
 rem "run.bat debug" запускает с консолью, чтобы было видно ошибки.
 if /i "%~1"=="debug" (
-  "%JAVA_BIN%\java.exe" -jar low-free-loader.jar
+  "%JAVA_BIN%\java.exe" -jar north-loader.jar
   echo.
   echo [*] Загрузчик завершился с кодом %errorlevel%.
   pause
 ) else (
-  start "" "%JAVA_BIN%\javaw.exe" -jar low-free-loader.jar
+  start "" "%JAVA_BIN%\javaw.exe" -jar north-loader.jar
 )

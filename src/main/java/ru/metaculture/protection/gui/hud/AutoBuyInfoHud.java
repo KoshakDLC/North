@@ -11,7 +11,7 @@ import java.util.Locale;
 )
 @HudElementInfo(
    resolve = "AutoBuyInfoHUD",
-   resolve2 = "L"
+   resolve2 = "N"
 )
 public final class AutoBuyInfoHud extends HudElement implements MinecraftAccessor {
    private static final AutoBuyInfoHud INSTANCE = new AutoBuyInfoHud();

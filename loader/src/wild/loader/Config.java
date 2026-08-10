@@ -16,7 +16,7 @@ final class Config {
    static final String JAR = "client.jar";
    static final String REPO = "github.repo";
    static final String CLIENT_URL = "client.url";
-   static final String DEFAULT_REPO = "KoshakDLC/LowFree";
+   static final String DEFAULT_REPO = "KoshakDLC/North";
    static final String RAM = "memory.gb";
    static final String NICK = "player.name";
    static final String LAUNCH_CMD = "launch.command";
@@ -31,7 +31,7 @@ final class Config {
    }
 
    static Config load() {
-      Path directory = appData().resolve("low free");
+      Path directory = appData().resolve("North");
       Config config = new Config(directory.resolve("loader.properties"));
 
       try {
@@ -54,7 +54,7 @@ final class Config {
          }
 
          try (OutputStream stream = Files.newOutputStream(this.file)) {
-            this.properties.store(stream, "low free loader");
+            this.properties.store(stream, "NorthLoader");
          }
       } catch (IOException exception2) {
       }
@@ -116,17 +116,17 @@ final class Config {
 
    /** Where downloaded builds are kept between launches. */
    static Path cacheDir() {
-      return appData().resolve("low free").resolve("cache");
+      return appData().resolve("North").resolve("cache");
    }
 
    /** Java runtimes downloaded from Mojang; shared by every game version. */
    static Path runtimeDir() {
-      return appData().resolve("low free").resolve("runtime");
+      return appData().resolve("North").resolve("runtime");
    }
 
    /** Everything the launched game prints, so a crash on startup can be explained. */
    static Path gameLog() {
-      return appData().resolve("low free").resolve("game.log");
+      return appData().resolve("North").resolve("game.log");
    }
 
    static Path appData() {

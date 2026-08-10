@@ -50,10 +50,10 @@ public final class Preview {
                begin.invoke(loader, "Запуск");
                Pipeline.Sink sink = (Pipeline.Sink)sinkMethod.invoke(loader, false);
                sink.log("Папка игры: C:\\Users\\lowfi\\AppData\\Roaming\\.minecraft", Theme.OK);
-               sink.log("Репозиторий: KoshakDLC/LowFree", Theme.MUTED);
-               sink.log("Новая сборка v1.4 — wild-v1.4.jar (4.2 МБ)", Theme.MUTED);
-               sink.log("Скачано wild-v1.4.jar (4.2 МБ).", Theme.OK);
-               sink.log("Установлен wild-v1.4.jar (4.2 МБ).", Theme.OK);
+               sink.log("Репозиторий: KoshakDLC/North", Theme.MUTED);
+               sink.log("Новая сборка v1.4 — north-v1.4.jar (4.2 МБ)", Theme.MUTED);
+               sink.log("Скачано north-v1.4.jar (4.2 МБ).", Theme.OK);
+               sink.log("Установлен north-v1.4.jar (4.2 МБ).", Theme.OK);
                sink.log("Fabric 0.19.3 готов.", Theme.OK);
                sink.log("Java для игры установлена.", Theme.OK);
                sink.progress(0.80, "Java");

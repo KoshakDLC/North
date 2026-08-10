@@ -5,7 +5,7 @@ package ru.metaculture.protection;
  * Uses Inter Semibold MSDF letter instead of the old icon-font logo.
  */
 public final class BrandMark {
-   public static final String GLYPH = "L";
+   public static final String GLYPH = "N";
 
    private BrandMark() {
    }

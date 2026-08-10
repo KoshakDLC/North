@@ -731,7 +731,7 @@ final class Widgets {
       }
    }
 
-   /** Red Z brand mark. */
+   /** North brand mark. */
    static final class Brand extends JComponent {
       Brand() {
          Anim.tick(() -> {

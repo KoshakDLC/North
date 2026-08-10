@@ -31,7 +31,7 @@ final class Game {
    private static final String FABRIC_META = "https://meta.fabricmc.net/v2/versions/loader/";
    private static final String FABRIC_API =
       "https://api.modrinth.com/v2/project/fabric-api/version?game_versions=%5B%22{version}%22%5D&loaders=%5B%22fabric%22%5D";
-   private static final String LAUNCHER_NAME = "low-free";
+   private static final String LAUNCHER_NAME = "north-loader";
 
    /** Progress and log callbacks, so the install can talk to the window without knowing about Swing. */
    interface Report {

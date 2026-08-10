@@ -93,7 +93,7 @@ public class ProtectInfo extends Module {
       new BooleanSetting("Рамки", true),
       new BooleanSetting("Картины", true)
    );
-   public final TextSetting zamena = new TextSetting("Замена", "low free");
+   public final TextSetting zamena = new TextSetting("Замена", "North");
    public final TextSetting kastomNik = new TextSetting("Кастом ник", "Protect");
    public final TextSetting kastomAnarhiya = new TextSetting("Кастом анархия", "Скрыто");
    public final BooleanSetting tsvetSkorborda = new BooleanSetting("Цвет скорборда", true);
@@ -292,10 +292,10 @@ public class ProtectInfo extends Module {
 
    private static String resolve11(ProtectInfo protectInfo12) {
       if (protectInfo12 == null) {
-         return "low free";
+         return "North";
       } else {
          String text8 = protectInfo12.zamena.getValue().trim();
-         return text8.isEmpty() ? "low free" : text8;
+         return text8.isEmpty() ? "North" : text8;
       }
    }
 

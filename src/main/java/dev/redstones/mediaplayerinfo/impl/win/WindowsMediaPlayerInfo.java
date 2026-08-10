@@ -36,7 +36,7 @@ public final class WindowsMediaPlayerInfo implements MediaPlayerInfo {
 
    private static void logLoadError() {
       if (LOAD_ERROR_LOGGED.compareAndSet(false, true)) {
-         System.err.println("[low free][MusicPlayer] MediaPlayerInfo native load failed: " + errorSummary(LOAD_ERROR));
+         System.err.println("[North][MusicPlayer] MediaPlayerInfo native load failed: " + errorSummary(LOAD_ERROR));
       }
    }
 

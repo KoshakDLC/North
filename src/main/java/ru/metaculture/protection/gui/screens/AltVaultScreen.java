@@ -84,7 +84,7 @@ public final class AltVaultScreen extends Screen implements BackdropScreen {
       "gg",
       "yt",
       "tv",
-      "wild",
+      "north",
       "pro",
       "uwu",
       "ya",

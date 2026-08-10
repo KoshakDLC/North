@@ -87,8 +87,8 @@ public class UnHook extends Module {
 
          List items = Files.readAllLines(path, StandardCharsets.UTF_8);
          List items2 = ((List<String>)items).stream()
-            .filter(string -> !string.contains("Wild »"))
-            .filter(string -> !string.contains("[low free]") && !string.contains("[Wild]"))
+            .filter(string -> !string.contains("North »"))
+            .filter(string -> !string.contains("[North]") && !string.contains("[Wild]"))
             .filter(string -> !string.contains("[Config]"))
             .filter(string -> !string.contains("[Manager]"))
             .filter(string -> !string.contains("[Baritone]"))
@@ -105,9 +105,9 @@ public class UnHook extends Module {
             .filter(string -> !string.contains("[ConfigManager]"))
             .filter(string -> !string.contains("[EventManager]"))
             .filter(string -> !string.contains("[SoundUtil]"))
-            .filter(string -> !string.contains("[WildGuard]"))
+            .filter(string -> !string.contains("[NorthGuard]"))
             .filter(string -> !string.contains("[FingerprintCrypto]"))
-            .filter(string -> !string.contains("Wild-"))
+            .filter(string -> !string.contains("North-"))
             .filter(string -> !string.contains("Logs sanitized"))
             .filter(string -> !string.contains("ScreenRenderDiagnostics"))
             .filter(string -> !string.contains("[ScreenRender]"))

@@ -58,7 +58,7 @@ final class ProfileAvatarTexture {
 
                return intValue;
             } catch (Throwable exception) {
-               LogUtils.getLogger().error("[low free] failed to load profile avatar texture", exception);
+               LogUtils.getLogger().error("[North] failed to load profile avatar texture", exception);
                return -1;
             }
          }

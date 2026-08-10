@@ -9,7 +9,7 @@ import ru.metaculture.profile.Profile;
 
 @HudElementInfo(
    resolve = "WaterMark",
-   resolve2 = "L"
+   resolve2 = "N"
 )
 public final class WatermarkHud extends HudElement {
    private static final WatermarkHud INSTANCE = new WatermarkHud();

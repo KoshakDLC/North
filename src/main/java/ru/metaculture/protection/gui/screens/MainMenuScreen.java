@@ -118,7 +118,7 @@ public final class MainMenuScreen extends Screen implements BackdropScreen {
    private float floatValue30 = -1.0F;
 
    public MainMenuScreen() {
-      super(Text.literal("low free"));
+      super(Text.literal("North"));
 
       for (int intValue = 0; intValue < this.mainMenuScreenState4s.length; intValue++) {
          this.mainMenuScreenState4s[intValue] = new MainMenuScreen.MainMenuScreenState4();

@@ -125,7 +125,7 @@ public final class ClientUserRegistry {
             .timeout(REQUEST_TIMEOUT)
             .header("Content-Type", "application/json")
             .header("Accept", "application/json")
-            .header("User-Agent", "WildClient-Presence")
+            .header("User-Agent", "NorthClient-Presence")
             .POST(BodyPublishers.ofString(payload.toString(), StandardCharsets.UTF_8))
             .build();
          HttpResponse<String> response = HTTP_CLIENT.send(request, BodyHandlers.ofString(StandardCharsets.UTF_8));

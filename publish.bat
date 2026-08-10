@@ -3,7 +3,7 @@ rem Заливает клиент в GitHub. Запускать из корня 
 setlocal
 cd /d "%~dp0"
 
-set "REPO=https://github.com/KoshakDLC/LowFree.git"
+set "REPO=https://github.com/KoshakDLC/North.git"
 set "BRANCH=main"
 
 where git >nul 2>&1
@@ -42,7 +42,7 @@ if errorlevel 1 goto :fail
 
 git diff --cached --quiet
 if errorlevel 1 (
-  git commit -m "Исходники клиента low free"
+  git commit -m "Исходники клиента North"
   if errorlevel 1 goto :fail
 ) else (
   echo [*] Изменений нет, коммит не нужен.

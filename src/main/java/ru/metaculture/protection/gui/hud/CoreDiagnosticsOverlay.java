@@ -7,7 +7,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.PlayerListEntry;
 
 public final class CoreDiagnosticsOverlay {
-   private static final String DIAGNOSTIKA_WILD_CORE = "Диагностика Wild Core";
+   private static final String DIAGNOSTIKA_WILD_CORE = "Диагностика North Core";
    private static final String RENDER_SHEYDERY_GL_ILOKALNYE_SLEPKI = "рендер, шейдеры, GL и локальные слепки";
    private static final String SLEPOK = "Слепок";
    private static final String PAPKA = "Папка";
@@ -313,7 +313,7 @@ public final class CoreDiagnosticsOverlay {
                g - metrics25.measure(1.0F),
                metrics25.measure(17.0F),
                13.0F,
-               "Диагностика Wild Core",
+               "Диагностика North Core",
                ColorScheme.compute6(colorScheme2.getIntValue14(), 40)
             );
          } finally {
@@ -329,7 +329,7 @@ public final class CoreDiagnosticsOverlay {
          g - metrics25.measure(1.0F),
          metrics25.measure(17.0F),
          13.0F,
-         "Диагностика Wild Core",
+         "Диагностика North Core",
          ClickGuiRenderUtils.compute2(colorScheme2)
       );
       ClickGuiRenderUtils.invoke4(

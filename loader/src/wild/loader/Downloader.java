@@ -64,7 +64,7 @@ final class Downloader {
       HttpRequest request = HttpRequest.newBuilder(uri)
          .timeout(Duration.ofSeconds(20L))
          .header("Accept", "application/vnd.github+json")
-         .header("User-Agent", "WildLoader")
+         .header("User-Agent", "NorthLoader")
          .GET()
          .build();
       HttpResponse<String> response = CLIENT.send(request, BodyHandlers.ofString(StandardCharsets.UTF_8));
@@ -94,7 +94,7 @@ final class Downloader {
       HttpRequest request = HttpRequest.newBuilder(URI.create(url))
          .timeout(Duration.ofSeconds(30L))
          .header("Accept", "application/json")
-         .header("User-Agent", "WildLoader")
+         .header("User-Agent", "NorthLoader")
          .GET()
          .build();
       HttpResponse<String> response = CLIENT.send(request, BodyHandlers.ofString(StandardCharsets.UTF_8));
@@ -166,7 +166,7 @@ final class Downloader {
       HttpRequest request = HttpRequest.newBuilder(URI.create(url))
          .timeout(Duration.ofMinutes(5L))
          .header("Accept", "application/octet-stream")
-         .header("User-Agent", "WildLoader")
+         .header("User-Agent", "NorthLoader")
          .GET()
          .build();
       HttpResponse<InputStream> response = CLIENT.send(request, BodyHandlers.ofInputStream());

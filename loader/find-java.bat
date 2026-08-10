@@ -24,7 +24,7 @@ if defined FOUND exit /b 0
 set "CAND=%~1"
 if not exist "%CAND%\java.exe" exit /b 0
 
-set "VERFILE=%TEMP%\low-free-java-version.txt"
+set "VERFILE=%TEMP%\north-java-version.txt"
 "%CAND%\java.exe" -version > "%VERFILE%" 2>&1
 if errorlevel 1 (
   del "%VERFILE%" >nul 2>&1

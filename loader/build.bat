@@ -33,10 +33,10 @@ popd
 rem PNG и прочие ресурсы лежат рядом с .java — кладём их в out рядом с классами.
 if exist "src\wild\loader\*.png" copy /y "src\wild\loader\*.png" "out\wild\loader\" >nul
 
-"%JAVA_BIN%\jar.exe" --create --file low-free-loader.jar --main-class wild.loader.Loader -C out .
+"%JAVA_BIN%\jar.exe" --create --file north-loader.jar --main-class wild.loader.Loader -C out .
 if errorlevel 1 (
   echo [!] Не удалось собрать jar.
   exit /b 1
 )
 
-echo [+] Готово: low-free-loader.jar
+echo [+] Готово: north-loader.jar

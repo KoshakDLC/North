@@ -261,7 +261,8 @@ final class Pipeline {
       try (DirectoryStream<Path> stream = Files.newDirectoryStream(mods, "*.jar")) {
          for (Path candidate : stream) {
             String name = candidate.getFileName().toString();
-            if (name.toLowerCase().startsWith("wild") && !name.equals(keep)) {
+            String lower = name.toLowerCase();
+            if ((lower.startsWith("north") || lower.startsWith("wild") || lower.startsWith("low-free") || lower.startsWith("lowfree")) && !name.equals(keep)) {
                try {
                   Files.delete(candidate);
                   this.info("Удалена старая сборка " + name);

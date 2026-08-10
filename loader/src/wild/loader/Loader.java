@@ -22,7 +22,7 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
-/** Entry point and window composition for the low free loader. */
+/** Entry point and window composition for NorthLoader. */
 public final class Loader {
    private static final int WIDTH = 1004;
    private static final int HEIGHT = 664;
@@ -33,7 +33,7 @@ public final class Loader {
    private static final String GAME_VERSION = "1.21.8";
 
    private final Config config = Config.load();
-   private final JFrame frame = new JFrame("low free");
+   private final JFrame frame = new JFrame("NorthLoader");
    private final Root root = new Root();
    private final Widgets.Nav[] navs = new Widgets.Nav[3];
    private final JComponent[] pages = new JComponent[3];
@@ -241,7 +241,7 @@ public final class Loader {
          protected void paintComponent(Graphics g) {
             Graphics2D g2 = Theme.hq(g);
             Theme.glass(g2, 0.0, 0.0, this.getWidth(), 208.0, 16.0, 1.0);
-            Theme.text(g2, "low free", 28.0, 56.0, Theme.font(Font.BOLD, 26.0F), Theme.TEXT);
+            Theme.text(g2, "NorthLoader", 28.0, 56.0, Theme.font(Font.BOLD, 26.0F), Theme.TEXT);
             Theme.text(g2, VERSION + " · Minecraft " + GAME_VERSION + " · Fabric", 28.0, 80.0, Theme.font(Font.PLAIN, 13.0F), Theme.ACCENT);
             Font font = Theme.font(Font.PLAIN, 12.5F);
             String[] lines = {
@@ -249,7 +249,7 @@ public final class Loader {
                "в mods и запускает Minecraft. Официальный лаунчер не нужен.",
                "",
                "HWID: " + Config.hardwareId(),
-               "Настройки: " + Config.appData().resolve("low free").resolve("loader.properties")
+               "Настройки: " + Config.appData().resolve("North").resolve("loader.properties")
             };
             double y = 118.0;
 
@@ -465,7 +465,7 @@ public final class Loader {
          Theme.fill(clip, 0.0, 0.0, width, height, 0.0, Theme.alpha(Theme.WHITE, 0.022));
          clip.dispose();
          Theme.fill(g2, width - 1.0, 12.0, 1.0, height - 24.0, 0.5, Theme.alpha(Theme.WHITE, 0.07));
-         Theme.text(g2, "low free", 86.0, 54.0, Theme.font(Font.BOLD, 19.0F), Theme.TEXT);
+         Theme.text(g2, "NorthLoader", 86.0, 54.0, Theme.font(Font.BOLD, 19.0F), Theme.TEXT);
          Theme.text(g2, VERSION + " · " + GAME_VERSION, 86.0, 72.0, Theme.font(Font.PLAIN, 11.5F), Theme.FAINT);
          Font font = Theme.font(Font.PLAIN, 11.0F);
          Theme.text(g2, "HWID " + Config.hardwareId(), 28.0, height - 34.0, font, Theme.FAINT);

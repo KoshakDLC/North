@@ -95,7 +95,7 @@ public abstract class MinecraftClientMixin {
       at = {@At("TAIL")}
    )
    private void wild$coreTickTail(CallbackInfo callbackInfo) {
-      MinecraftClient.getInstance().getWindow().setTitle("low free");
+      MinecraftClient.getInstance().getWindow().setTitle("North");
       RenderDiagnosticsTracker.getInstance().invoke2();
    }
 

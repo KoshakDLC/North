@@ -119,7 +119,7 @@ public final class WildMultiplayerScreen extends Screen implements BackdropScree
    private final AtomicBoolean atomicBoolean = new AtomicBoolean(false);
 
    public WildMultiplayerScreen(Screen screen) {
-      super(Text.literal("low free Multiplayer"));
+      super(Text.literal("North Multiplayer"));
       this.screen = screen;
 
       for (int intValue = 0; intValue < this.wildMultiplayerScreenState2s.length; intValue++) {

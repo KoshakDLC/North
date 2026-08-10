@@ -15,12 +15,12 @@ public final class ChatUtil implements MinecraftAccessor {
       if (client.inGameHud != null && client.inGameHud.getChatHud() != null) {
          Theme theme = WildClient.INSTANCE != null && WildClient.INSTANCE.themeManager != null ? WildClient.INSTANCE.themeManager.getTheme() : Theme.WILD;
          MutableText mutableText = Text.literal("")
-            .append(createGradientText("low free", theme))
+            .append(createGradientText("North", theme))
             .append(Text.literal(" » ").formatted(Formatting.WHITE))
             .append(Text.literal(string).formatted(Formatting.GRAY));
          client.inGameHud.getChatHud().addMessage(mutableText);
       } else {
-         System.out.println("[low free] " + string);
+         System.out.println("[North] " + string);
       }
    }
 

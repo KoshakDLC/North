@@ -1,4 +1,4 @@
-# low free — загрузчик
+# NorthLoader
 
 Десктопный лоадер клиента: сам ставит Minecraft с Fabric и нужной Java, берёт свежую
 сборку с GitHub, кладёт её в `mods` и запускает игру. Официальный лаунчер не нужен —
@@ -8,21 +8,36 @@
 
 ![Главная](preview-home.png)
 
-## Сборка и запуск
+## Раздача людям
+
+Один файл — `NorthLoader.exe`. При первом запуске достаёт UI в
+`%LOCALAPPDATA%\Programs\NorthLoader\`. Если Java 17+ нет — предложит открыть
+[Adoptium](https://adoptium.net/) (сам runtime больше не качает: тихая загрузка
+exe ловит антивирусы).
 
 ```bat
 cd loader
-build.bat        :: соберёт low-free-loader.jar
-run.bat          :: соберёт, если нужно, и запустит
-run.bat debug    :: то же, но с консолью — видно ошибки
+build-exe.bat    :: соберёт jar и упакует его внутрь NorthLoader.exe
 ```
 
-Нужна **Java 17 или новее**. Скрипты не полагаются на `PATH`: `find-java.bat` перебирает
-`JAVA_HOME`, `%USERPROFILE%\.jdks`, Program Files и только в конце `PATH`, проверяя версию
-каждой найденной сборки.
+Готовый `NorthLoader.exe` можно кидать людям. Чтобы убрать ложные срабатывания
+VirusTotal почти полностью — подпиши exe Authenticode (сертификат Code Signing).
 
-> Запускай именно `run.bat`, а не двойной клик по `low-free-loader.jar`. В Windows jar-файлы
-> обычно привязаны к старой Java 8, и она выдаёт «A Java Exception has occurred» вместо окна.
+## Сборка и запуск (для разработки)
+
+```bat
+cd loader
+build.bat        :: соберёт north-loader.jar
+run.bat          :: соберёт, если нужно, и запустит
+run.bat debug    :: то же, но с консолью — видно ошибки
+NorthLoader.exe debug :: то же через exe
+```
+
+Для `run.bat` нужна **Java 17+**. Скрипты не полагаются на `PATH`: `find-java.bat`
+перебирает `JAVA_HOME`, `%USERPROFILE%\.jdks`, Program Files и только в конце `PATH`.
+
+> Не запускай `north-loader.jar` двойным кликом — Windows часто открывает его
+> старой Java 8. Бери `NorthLoader.exe` или `run.bat`.
 
 ## Что делает при запуске
 
@@ -36,11 +51,11 @@ run.bat debug    :: то же, но с консолью — видно ошиб�
 
 ## Откуда берётся сборка
 
-По умолчанию — из релиза `latest` репозитория `KoshakDLC/LowFree`, который обновляет
+По умолчанию — из релиза `latest` репозитория `KoshakDLC/North`, который обновляет
 GitHub Actions при каждом пуше в `main`. Загрузчик берёт из релиза первый `.jar`, пропуская
 `-sources` и `-dev`.
 
-Скачанное лежит в `%APPDATA%\low free\cache\<тег релиза>\`. Пока тег и размер файла совпадают
+Скачанное лежит в `%APPDATA%\North\cache\<тег релиза>\`. Пока тег и размер файла совпадают
 с релизом, повторной загрузки не будет — новый релиз скачается сам.
 
 Источник можно переопределить, приоритет сверху вниз:
@@ -52,13 +67,13 @@ GitHub Actions при каждом пуше в `main`. Загрузчик бер
 
 ## Настройки
 
-Хранятся в `%APPDATA%\low free\loader.properties` и сохраняются сразу при изменении:
+Хранятся в `%APPDATA%\North\loader.properties` и сохраняются сразу при изменении:
 
 | Ключ | Смысл |
 | --- | --- |
 | `minecraft.dir` | папка игры; в интерфейсе не показана, пусто — `%APPDATA%\.minecraft` |
 | `player.name` | ник в игре (offline); пусто — имя пользователя системы |
-| `github.repo` | репозиторий со сборками, по умолчанию `KoshakDLC/LowFree` |
+| `github.repo` | репозиторий со сборками, по умолчанию `KoshakDLC/North` |
 | `client.url` | прямая ссылка на джарник вместо релизов |
 | `client.jar` | локальный джарник, отключает загрузку |
 | `memory.gb` | выделяемая память |
@@ -66,8 +81,8 @@ GitHub Actions при каждом пуше в `main`. Загрузчик бер
 | `auto.install` | обновлять клиент при запуске |
 | `close.on.launch` | закрывать загрузчик после старта игры |
 
-Java от Mojang лежит в `%APPDATA%\low free\runtime\`, лог последнего запуска игры —
-в `%APPDATA%\low free\game.log`.
+Java от Mojang лежит в `%APPDATA%\North\runtime\`, лог последнего запуска игры —
+в `%APPDATA%\North\game.log`.
 
 ## Разработка
 
@@ -84,8 +99,8 @@ java -cp out wild.loader.Preview preview.png 1
 `tools/wild/loader/DownloadCheck.java` проверяет разбор релизов и саму загрузку:
 
 ```bat
-java -cp out wild.loader.DownloadCheck KoshakDLC/LowFree
-java -cp out wild.loader.DownloadCheck download KoshakDLC/LowFree
+java -cp out wild.loader.DownloadCheck KoshakDLC/North
+java -cp out wild.loader.DownloadCheck download KoshakDLC/North
 ```
 
 `tools/wild/loader/MetaCheck.java` проверяет метаданные Mojang и Fabric без тяжёлых загрузок:

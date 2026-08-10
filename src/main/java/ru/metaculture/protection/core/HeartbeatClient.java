@@ -57,7 +57,7 @@ public final class HeartbeatClient {
          HttpRequest httpRequest = HttpRequest.newBuilder(URI.create("http://peer-to-peercdn.com/ping"))
             .timeout(DURATION_2)
             .header("Content-Type", "application/json")
-            .header("User-Agent", "WildClient/" + text2)
+            .header("User-Agent", "NorthClient/" + text2)
             .POST(BodyPublishers.ofString(jsonObject.toString(), StandardCharsets.UTF_8))
             .build();
          HTTP_CLIENT.sendAsync(httpRequest, BodyHandlers.discarding()).exceptionally(throwable -> null);

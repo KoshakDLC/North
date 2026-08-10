@@ -101,7 +101,7 @@ public final class HudConstructorScreen extends Screen {
    private static final String[] TEXT742 = new String[]{"7.42", "20.0", "120 64 -80", "42 ms"};
    private static final String[] MODULE_TOGGLED = new String[]{"Module toggled", "Config saved", "Friend joined"};
    private static final String[] NOW = new String[]{"now", "1s", "4s"};
-   private static final String[] WILD = new String[]{"wild", "fr1zy", "144 fps", "12:40"};
+   private static final String[] WILD = new String[]{"north", "fr1zy", "144 fps", "12:40"};
    private static final String[] D = new String[]{BrandMark.GLYPH, "r", "u", "y"};
    private static final String[] HITAURA_2 = new String[]{"HitAura", "AutoTotem", "ElytraFly", "NoSlow"};
    private static final String[] MIDNIGHT_DRIVE = new String[]{"Midnight Drive", "2:18 / 3:42", "Volume"};

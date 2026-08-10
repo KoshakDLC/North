@@ -78,7 +78,7 @@ public class TelegramApiCommand extends Command {
          ChatUtil.sendClientMessage("§cTelegram API не настроен. Задайте token и chatid.");
          return;
       }
-      Thread thread = new Thread(() -> TelegramApi.invoke2("low free: тестовое уведомление"), "lowfree-Telegram-Test");
+      Thread thread = new Thread(() -> TelegramApi.invoke2("North: тестовое уведомление"), "north-Telegram-Test");
       thread.setDaemon(true);
       thread.start();
       ChatUtil.sendClientMessage("§aТестовое Telegram-уведомление отправляется.");
