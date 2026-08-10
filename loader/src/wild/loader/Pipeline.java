@@ -165,7 +165,9 @@ final class Pipeline {
             if (asset == null) {
                this.warn("В релизах " + repository + " нет джарника.");
             } else {
-               Path cached = Config.cacheDir().resolve(asset.safeTag()).resolve(asset.name());
+               // Tag is often always "latest", so fold the size into the cache path —
+               // otherwise a rebuilt release with the same tag can keep serving a stale jar.
+               Path cached = Config.cacheDir().resolve(asset.safeTag() + "-" + asset.size()).resolve(asset.name());
                if (Files.isRegularFile(cached) && sizeOf(cached) == asset.size()) {
                   this.ok("Сборка " + asset.tag() + " уже скачана.");
                   return cached;
