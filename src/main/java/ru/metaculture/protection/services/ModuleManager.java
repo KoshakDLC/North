@@ -35,7 +35,7 @@ public class ModuleManager {
          AutoTool.class, AutoTotem.class, AutoVillageTrade.class, AutoWood.class, BaseFinder.class, Blink.class,
          BlockESP.class, BlockOutline.class, BowHelper.class, CameraClip.class, Cape.class, Chams.class,
          ChatHelper.class, ChestStealer.class, ChinaHat.class, ChorusFarm.class, ClanUpgrade.class, ClickPearl.class,
-         ClientUtil.class, CocoaFarm.class, ColorPlus.class, CreeperFarm.class, Criticals.class, DeadEffect.class,
+         ClientUtil.class, CocoaFarm.class, ColorPlus.class, Cosmetics.class, CreeperFarm.class, Criticals.class, DeadEffect.class,
          DragonFly.class, ElytraHelper.class, ElytraTarget.class, ESP.class, FakePlayer.class, FastBow.class,
          FastBreak.class, FreeCamera.class, FreeLock.class, FriendManager.class, FullBright.class, GeyserHelper.class,
          GlowESP.class, GrimGlide.class, Hands.class, HitBox.class, HitSounds.class, HudModule.class,

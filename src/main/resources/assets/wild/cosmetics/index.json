@@ -1,0 +1,382 @@
+{
+    "cosmetics":  [
+                      {
+                          "id":  85,
+                          "type":  "hat",
+                          "name":  "Маска - Bro9I",
+                          "path":  "hat/85/model.json"
+                      },
+                      {
+                          "id":  98,
+                          "type":  "hat",
+                          "name":  "Нимб",
+                          "path":  "hat/98/model.json"
+                      },
+                      {
+                          "id":  50,
+                          "type":  "hat",
+                          "name":  "Шапка -  Chicken",
+                          "path":  "hat/50/model.json"
+                      },
+                      {
+                          "id":  48,
+                          "type":  "hat",
+                          "name":  "Шапка - Armour",
+                          "path":  "hat/48/model.json"
+                      },
+                      {
+                          "id":  92,
+                          "type":  "hat",
+                          "name":  "Шапка - Bear",
+                          "path":  "hat/92/model.json"
+                      },
+                      {
+                          "id":  49,
+                          "type":  "hat",
+                          "name":  "Шапка - Capybara",
+                          "path":  "hat/49/model.json"
+                      },
+                      {
+                          "id":  80,
+                          "type":  "hat",
+                          "name":  "Шапка - Fluger",
+                          "path":  "hat/80/model.json"
+                      },
+                      {
+                          "id":  97,
+                          "type":  "hat",
+                          "name":  "Шапка - Happy",
+                          "path":  "hat/97/model.json"
+                      },
+                      {
+                          "id":  53,
+                          "type":  "hat",
+                          "name":  "Шапка - Pepe",
+                          "path":  "hat/53/model.json"
+                      },
+                      {
+                          "id":  125,
+                          "type":  "hat",
+                          "name":  "Шапка - Pulse",
+                          "path":  "hat/125/model.json"
+                      },
+                      {
+                          "id":  57,
+                          "type":  "hat",
+                          "name":  "Шапка - Sheep",
+                          "path":  "hat/57/model.json"
+                      },
+                      {
+                          "id":  88,
+                          "type":  "hat",
+                          "name":  "Шапка - Аквыч",
+                          "path":  "hat/88/model.json"
+                      },
+                      {
+                          "id":  96,
+                          "type":  "hat",
+                          "name":  "Шапка - ПеПе",
+                          "path":  "hat/96/model.json"
+                      },
+                      {
+                          "id":  61,
+                          "type":  "wings",
+                          "name":  "Крылья - Angel",
+                          "path":  "wings/61/model.json"
+                      },
+                      {
+                          "id":  25,
+                          "type":  "wings",
+                          "name":  "Крылья - Aurum",
+                          "path":  "wings/25/model.json"
+                      },
+                      {
+                          "id":  99,
+                          "type":  "wings",
+                          "name":  "Крылья - Dark",
+                          "path":  "wings/99/model.json"
+                      },
+                      {
+                          "id":  63,
+                          "type":  "wings",
+                          "name":  "Крылья - Diamond",
+                          "path":  "wings/63/model.json"
+                      },
+                      {
+                          "id":  62,
+                          "type":  "wings",
+                          "name":  "Крылья - Dragon",
+                          "path":  "wings/62/model.json"
+                      },
+                      {
+                          "id":  65,
+                          "type":  "wings",
+                          "name":  "Крылья - Easter",
+                          "path":  "wings/65/model.json"
+                      },
+                      {
+                          "id":  82,
+                          "type":  "wings",
+                          "name":  "Крылья - Fluger",
+                          "path":  "wings/82/model.json"
+                      },
+                      {
+                          "id":  124,
+                          "type":  "wings",
+                          "name":  "Крылья - Ghoul",
+                          "path":  "wings/124/model.json"
+                      },
+                      {
+                          "id":  123,
+                          "type":  "wings",
+                          "name":  "Крылья - Pulse",
+                          "path":  "wings/123/model.json"
+                      },
+                      {
+                          "id":  64,
+                          "type":  "wings",
+                          "name":  "Крылья - Spider",
+                          "path":  "wings/64/model.json"
+                      },
+                      {
+                          "id":  91,
+                          "type":  "wings",
+                          "name":  "Крылья - Аквыч",
+                          "path":  "wings/91/model.json"
+                      },
+                      {
+                          "id":  136,
+                          "type":  "wings",
+                          "name":  "Крылья - Ягуар",
+                          "path":  "wings/136/model.json"
+                      },
+                      {
+                          "id":  86,
+                          "type":  "wings",
+                          "name":  "Трезубец - Броя",
+                          "path":  "wings/86/model.json"
+                      },
+                      {
+                          "id":  58,
+                          "type":  "cape",
+                          "name":  "Плащ -  Knife",
+                          "path":  "cape/58/model.json"
+                      },
+                      {
+                          "id":  87,
+                          "type":  "cape",
+                          "name":  "Плащ - Aqua",
+                          "path":  "cape/87/model.json"
+                      },
+                      {
+                          "id":  60,
+                          "type":  "cape",
+                          "name":  "Плащ - Chrome",
+                          "path":  "cape/60/model.json"
+                      },
+                      {
+                          "id":  76,
+                          "type":  "cape",
+                          "name":  "Плащ - Fluger",
+                          "path":  "cape/76/model.json"
+                      },
+                      {
+                          "id":  79,
+                          "type":  "cape",
+                          "name":  "Плащ - Fluger V2",
+                          "path":  "cape/79/model.json"
+                      },
+                      {
+                          "id":  77,
+                          "type":  "cape",
+                          "name":  "Плащ - Fluger V3",
+                          "path":  "cape/77/model.json"
+                      },
+                      {
+                          "id":  59,
+                          "type":  "cape",
+                          "name":  "Плащ - Layout",
+                          "path":  "cape/59/model.json"
+                      },
+                      {
+                          "id":  102,
+                          "type":  "cape",
+                          "name":  "Плащ - Аквыч V2",
+                          "path":  "cape/102/model.json"
+                      },
+                      {
+                          "id":  83,
+                          "type":  "cape",
+                          "name":  "Плащ - Броя",
+                          "path":  "cape/83/model.json"
+                      },
+                      {
+                          "id":  100,
+                          "type":  "cape",
+                          "name":  "Плащ - Броя V2",
+                          "path":  "cape/100/model.json"
+                      },
+                      {
+                          "id":  101,
+                          "type":  "cape",
+                          "name":  "Плащ - Броя V3",
+                          "path":  "cape/101/model.json"
+                      },
+                      {
+                          "id":  131,
+                          "type":  "cape",
+                          "name":  "Плащ - Ягуар",
+                          "path":  "cape/131/model.json"
+                      },
+                      {
+                          "id":  130,
+                          "type":  "cape",
+                          "name":  "Плащ - Ягуар V2",
+                          "path":  "cape/130/model.json"
+                      },
+                      {
+                          "id":  23,
+                          "type":  "cape",
+                          "name":  "Плащ PulseVisuals",
+                          "path":  "cape/23/model.json"
+                      },
+                      {
+                          "id":  137,
+                          "type":  "bodywear",
+                          "name":  "Катана - ila_studio",
+                          "path":  "bodywear/137/model.json"
+                      },
+                      {
+                          "id":  44,
+                          "type":  "bodywear",
+                          "name":  "Рюкзак -  Chrome Hearts",
+                          "path":  "bodywear/44/model.json"
+                      },
+                      {
+                          "id":  95,
+                          "type":  "bodywear",
+                          "name":  "Рюкзак -  PePe",
+                          "path":  "bodywear/95/model.json"
+                      },
+                      {
+                          "id":  38,
+                          "type":  "bodywear",
+                          "name":  "Рюкзак - Adidas",
+                          "path":  "bodywear/38/model.json"
+                      },
+                      {
+                          "id":  43,
+                          "type":  "bodywear",
+                          "name":  "Рюкзак - Balenciaga",
+                          "path":  "bodywear/43/model.json"
+                      },
+                      {
+                          "id":  42,
+                          "type":  "bodywear",
+                          "name":  "Рюкзак - Bape",
+                          "path":  "bodywear/42/model.json"
+                      },
+                      {
+                          "id":  37,
+                          "type":  "bodywear",
+                          "name":  "Рюкзак - Gucci",
+                          "path":  "bodywear/37/model.json"
+                      },
+                      {
+                          "id":  36,
+                          "type":  "bodywear",
+                          "name":  "Рюкзак - Louis Vuitton",
+                          "path":  "bodywear/36/model.json"
+                      },
+                      {
+                          "id":  39,
+                          "type":  "bodywear",
+                          "name":  "Рюкзак - Nike",
+                          "path":  "bodywear/39/model.json"
+                      },
+                      {
+                          "id":  40,
+                          "type":  "bodywear",
+                          "name":  "Рюкзак - Supreme",
+                          "path":  "bodywear/40/model.json"
+                      },
+                      {
+                          "id":  41,
+                          "type":  "bodywear",
+                          "name":  "Рюкзак - Vlone",
+                          "path":  "bodywear/41/model.json"
+                      },
+                      {
+                          "id":  126,
+                          "type":  "pet",
+                          "name":  "Питомец - 1 Год",
+                          "path":  "pet/126/model.json"
+                      },
+                      {
+                          "id":  45,
+                          "type":  "pet",
+                          "name":  "Питомец - Angel",
+                          "path":  "pet/45/model.json"
+                      },
+                      {
+                          "id":  93,
+                          "type":  "pet",
+                          "name":  "Питомец - Bee",
+                          "path":  "pet/93/model.json"
+                      },
+                      {
+                          "id":  47,
+                          "type":  "pet",
+                          "name":  "Питомец - Buddy",
+                          "path":  "pet/47/model.json"
+                      },
+                      {
+                          "id":  133,
+                          "type":  "pet",
+                          "name":  "Питомец - Cergifff",
+                          "path":  "pet/133/model.json"
+                      },
+                      {
+                          "id":  135,
+                          "type":  "pet",
+                          "name":  "Питомец - Creeper",
+                          "path":  "pet/135/model.json"
+                      },
+                      {
+                          "id":  46,
+                          "type":  "pet",
+                          "name":  "Питомец - Demon",
+                          "path":  "pet/46/model.json"
+                      },
+                      {
+                          "id":  84,
+                          "type":  "pet",
+                          "name":  "Питомец - Diamond",
+                          "path":  "pet/84/model.json"
+                      },
+                      {
+                          "id":  81,
+                          "type":  "pet",
+                          "name":  "Питомец - Fluger Door",
+                          "path":  "pet/81/model.json"
+                      },
+                      {
+                          "id":  134,
+                          "type":  "pet",
+                          "name":  "Питомец - Ila_Studio",
+                          "path":  "pet/134/model.json"
+                      },
+                      {
+                          "id":  90,
+                          "type":  "pet",
+                          "name":  "Питомец - Аквыч",
+                          "path":  "pet/90/model.json"
+                      },
+                      {
+                          "id":  132,
+                          "type":  "pet",
+                          "name":  "Питомец - Ягуар",
+                          "path":  "pet/132/model.json"
+                      }
+                  ]
+}

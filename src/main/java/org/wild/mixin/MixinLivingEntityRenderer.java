@@ -23,6 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import ru.metaculture.protection.Chams;
 import ru.metaculture.protection.ChinaHat;
+import ru.metaculture.protection.Cosmetics;
 import ru.metaculture.protection.DeadEffect;
 import ru.metaculture.protection.NameTags;
 import ru.metaculture.protection.EntityFramebufferCapture;
@@ -230,6 +231,7 @@ public abstract class MixinLivingEntityRenderer {
          Chams chams = Chams.getActive();
          if (chams == null || !chams.shouldHideFeatures(state)) {
             ChinaHat.renderForPlayer(capturedPlayerState, playerModel, matrices, buffers, light);
+            Cosmetics.renderForPlayer(capturedPlayerState, playerModel, matrices, buffers, light);
             return;
          }
       } catch (Throwable ignored) {
