@@ -218,27 +218,22 @@ public class AttackAura extends Module {
       if (check16()) {
          RandomAimStrategy.invoke4();
          NoiseAimStrategy.invoke2();
+         DirectAimStrategy.invoke2();
          this.invoke29();
          this.invoke30();
       } else if (livingEntity != null && CLIENT.player != null && CLIENT.world != null) {
          this.invoke26();
-         if (!rezhimRotatsii.is("Legit")) {
+         if (rezhimRotatsii.is("Legit")) {
+            DirectAimStrategy.invoke(livingEntity);
+         } else {
             this.invoke2();
          }
       } else {
          RandomAimStrategy.invoke4();
          NoiseAimStrategy.invoke2();
+         DirectAimStrategy.invoke2();
          this.invoke29();
          this.invoke30();
-      }
-   }
-
-   @EventHandler
-   public void onCameraRotation(CameraRotationEvent cameraRotationEvent) {
-      if (!check16() && rezhimRotatsii.is("Legit")) {
-         if (livingEntity != null && CLIENT.player != null && CLIENT.world != null) {
-            DirectAimStrategy.invoke(livingEntity, cameraRotationEvent);
-         }
       }
    }
 
@@ -294,6 +289,7 @@ public class AttackAura extends Module {
          if (livingEntity == null) {
             RandomAimStrategy.invoke4();
             NoiseAimStrategy.invoke2();
+            DirectAimStrategy.invoke2();
             this.invoke29();
             this.invoke30();
             this.invoke5();
@@ -867,6 +863,7 @@ public class AttackAura extends Module {
       this.invoke7();
       AiRotationTrainer.invoke10();
       RandomAimStrategy.invoke3();
+      DirectAimStrategy.invoke2();
       AttackRotationController.invoke4();
       if (this.enabled) {
          NoiseAimStrategy.invoke3();
@@ -1375,6 +1372,7 @@ public class AttackAura extends Module {
       this.invoke7();
       RandomAimStrategy.invoke3();
       NoiseAimStrategy.invoke2();
+      DirectAimStrategy.invoke2();
       CriticalHitController.invoke2();
       AttackRotationController.invoke4();
       super.onDisable();
