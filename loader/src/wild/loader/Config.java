@@ -148,6 +148,32 @@ final class Config {
       }
    }
 
+   /** Newest previously downloaded client jar, so a GitHub outage still launches. */
+   static Path findCachedJar() {
+      Path cache = cacheDir();
+      if (!Files.isDirectory(cache)) {
+         return null;
+      }
+
+      Path best = newestJar(cache);
+
+      try (DirectoryStream<Path> stream = Files.newDirectoryStream(cache)) {
+         for (Path child : stream) {
+            if (Files.isDirectory(child)) {
+               Path candidate = newestJar(child);
+               if (candidate != null
+                  && (best == null || Files.getLastModifiedTime(candidate).compareTo(Files.getLastModifiedTime(best)) > 0)) {
+                  best = candidate;
+               }
+            }
+         }
+      } catch (IOException exception) {
+         return best;
+      }
+
+      return best;
+   }
+
    /** Newest built mod jar, searched in the gradle output of the surrounding project. */
    static Path findBuiltJar() {
       Path working = Paths.get(System.getProperty("user.dir")).toAbsolutePath();

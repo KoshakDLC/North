@@ -60,8 +60,37 @@ final class Downloader {
 
    /** Latest release of {@code owner/name}, or null when the repository has no published jar. */
    static Downloader.Asset latestRelease(String repository) throws IOException, InterruptedException {
-      URI uri = URI.create("https://api.github.com/repos/" + repository.trim() + "/releases/latest");
-      HttpRequest request = HttpRequest.newBuilder(uri)
+      String repo = repository.trim();
+      String[] endpoints = {
+         "https://api.github.com/repos/" + repo + "/releases/latest",
+         "https://api.github.com/repos/" + repo + "/releases/tags/latest"
+      };
+      IOException last = null;
+
+      for (int attempt = 0; attempt < 3; attempt++) {
+         for (String endpoint : endpoints) {
+            try {
+               Downloader.Asset asset = readRelease(endpoint);
+               if (asset != null) {
+                  return asset;
+               }
+            } catch (IOException exception) {
+               last = exception;
+            }
+         }
+
+         Thread.sleep(400L * (attempt + 1));
+      }
+
+      if (last != null) {
+         throw last;
+      }
+
+      return null;
+   }
+
+   private static Downloader.Asset readRelease(String url) throws IOException, InterruptedException {
+      HttpRequest request = HttpRequest.newBuilder(URI.create(url))
          .timeout(Duration.ofSeconds(20L))
          .header("Accept", "application/vnd.github+json")
          .header("User-Agent", "NorthLoader")

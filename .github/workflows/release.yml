@@ -51,7 +51,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release delete latest --yes --cleanup-tag || true
-          gh release create latest "${{ steps.jar.outputs.path }}" \
-            --title "Последняя сборка" \
-            --notes "Автоматическая сборка коммита ${GITHUB_SHA::7}."
+          # Не удаляем latest: пока тега нет, лоадер пишет «сервер обновлений недоступен».
+          if gh release view latest >/dev/null 2>&1; then
+            gh release upload latest "${{ steps.jar.outputs.path }}" --clobber
+            gh release edit latest --title "Последняя сборка" --notes "Автоматическая сборка коммита ${GITHUB_SHA::7}."
+          else
+            gh release create latest "${{ steps.jar.outputs.path }}" \
+              --title "Последняя сборка" \
+              --notes "Автоматическая сборка коммита ${GITHUB_SHA::7}."
+          fi

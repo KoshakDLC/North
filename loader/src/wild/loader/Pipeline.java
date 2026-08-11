@@ -173,6 +173,11 @@ final class Pipeline {
             Downloader.Asset asset = Downloader.latestRelease(repository);
             if (asset == null) {
                this.warn("В обновлениях нет джарника.");
+               Path cachedMissing = Config.findCachedJar();
+               if (cachedMissing != null) {
+                  this.warn("Беру последнюю скачанную сборку " + cachedMissing.getFileName() + ".");
+                  return cachedMissing;
+               }
             } else {
                // Tag is often always "latest", so fold the size into the cache path —
                // otherwise a rebuilt release with the same tag can keep serving a stale jar.
@@ -190,7 +195,12 @@ final class Pipeline {
             this.error("Загрузка прервана.");
             return null;
          } catch (Exception exception10) {
-            this.error("Сервер обновлений недоступен: " + describe(exception10));
+            this.warn("Сервер обновлений недоступен: " + describe(exception10));
+            Path cachedBroken = Config.findCachedJar();
+            if (cachedBroken != null) {
+               this.warn("Беру последнюю скачанную сборку " + cachedBroken.getFileName() + ".");
+               return cachedBroken;
+            }
          }
       }
 
