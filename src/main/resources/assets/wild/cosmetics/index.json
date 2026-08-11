@@ -247,6 +247,12 @@
                           "path":  "bodywear/137/model.json"
                       },
                       {
+                          "id":  138,
+                          "type":  "bodywear",
+                          "name":  "Булава - Коса",
+                          "path":  "bodywear/138/model.json"
+                      },
+                      {
                           "id":  44,
                           "type":  "bodywear",
                           "name":  "Рюкзак -  Chrome Hearts",

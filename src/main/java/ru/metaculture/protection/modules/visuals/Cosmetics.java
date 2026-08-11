@@ -12,6 +12,7 @@ import org.wild.module.api.ModuleRegister;
 import ru.metaculture.protection.cosmetics.CosmeticPack;
 import ru.metaculture.protection.cosmetics.model.CosmeticModel;
 import ru.metaculture.protection.cosmetics.render.CosmeticRenderer;
+import ru.metaculture.protection.cosmetics.render.MaceKosaRenderer;
 
 @ModuleRegister(
    name = "Cosmetics",
@@ -93,6 +94,10 @@ public final class Cosmetics extends Module {
    }
 
    private void addIfPresent(List<CosmeticModel> models, String type, String name) {
+      if (MaceKosaRenderer.isSelectedCosmetic(type, name)) {
+         return;
+      }
+
       CosmeticModel model = CosmeticPack.resolve(type, name);
       if (model != null) {
          models.add(model);

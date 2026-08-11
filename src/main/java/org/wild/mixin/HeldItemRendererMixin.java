@@ -40,6 +40,7 @@ import ru.metaculture.protection.FreeLookController;
 import ru.metaculture.protection.HandMaskRenderer;
 import ru.metaculture.protection.SwingAnimation;
 import ru.metaculture.protection.WildClient;
+import ru.metaculture.protection.cosmetics.render.MaceKosaRenderer;
 
 @Environment(EnvType.CLIENT)
 @Mixin({HeldItemRenderer.class})
@@ -200,13 +201,17 @@ public abstract class HeldItemRendererMixin {
 
       float floatValue9 = SwingAnimation.measure(this.wild$currentHand);
       if (Math.abs(floatValue9 - 1.0F) <= 1.0E-4F) {
-         operation.call(new Object[]{itemRenderer, livingEntity, itemStack, itemDisplayContext, matrixStack, vertexConsumerProvider2, world, i, j, k});
+         if (!MaceKosaRenderer.tryRenderHeld(livingEntity, itemStack, itemDisplayContext, matrixStack, vertexConsumerProvider2, i)) {
+            operation.call(new Object[]{itemRenderer, livingEntity, itemStack, itemDisplayContext, matrixStack, vertexConsumerProvider2, world, i, j, k});
+         }
       } else {
          matrixStack.push();
          matrixStack.scale(floatValue9, floatValue9, floatValue9);
 
          try {
-            operation.call(new Object[]{itemRenderer, livingEntity, itemStack, itemDisplayContext, matrixStack, vertexConsumerProvider2, world, i, j, k});
+            if (!MaceKosaRenderer.tryRenderHeld(livingEntity, itemStack, itemDisplayContext, matrixStack, vertexConsumerProvider2, i)) {
+               operation.call(new Object[]{itemRenderer, livingEntity, itemStack, itemDisplayContext, matrixStack, vertexConsumerProvider2, world, i, j, k});
+            }
          } finally {
             matrixStack.pop();
          }

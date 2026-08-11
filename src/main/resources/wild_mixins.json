@@ -29,6 +29,7 @@
     "GameMenuScreenMixin",
     "GameRendererMixin",
     "HandledScreenMixin",
+    "HeldItemFeatureRendererMixin",
     "HeldItemRendererMixin",
     "InactivityFpsLimiterMixin",
     "InGameHudMixin",
