@@ -24,6 +24,7 @@ public final class Cosmetics extends Module {
    public final ModeSetting wings;
    public final ModeSetting cape;
    public final ModeSetting bodywear;
+   public final ModeSetting weapon;
    public final ModeSetting pet;
    public final BooleanSetting naDrugihIgrokah;
 
@@ -32,9 +33,15 @@ public final class Cosmetics extends Module {
       this.wings = new ModeSetting("Крылья", "Нет", CosmeticPack.options("wings"));
       this.cape = new ModeSetting("Плащ", "Нет", CosmeticPack.options("cape"));
       this.bodywear = new ModeSetting("Одежда", "Нет", CosmeticPack.options("bodywear"));
+      this.weapon = new ModeSetting("Булава", "Нет", weaponOptions());
       this.pet = new ModeSetting("Питомец", "Нет", CosmeticPack.options("pet"));
       this.naDrugihIgrokah = new BooleanSetting("На других игроках", false);
-      this.addSettings(this.hat, this.wings, this.cape, this.bodywear, this.pet, this.naDrugihIgrokah);
+      this.addSettings(this.hat, this.wings, this.cape, this.bodywear, this.weapon, this.pet, this.naDrugihIgrokah);
+   }
+
+   private static String[] weaponOptions() {
+      String[] options = CosmeticPack.options("weapon");
+      return options.length > 1 ? options : new String[]{"Нет", "Коса"};
    }
 
    public static void renderForPlayer(

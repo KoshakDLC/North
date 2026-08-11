@@ -21,14 +21,13 @@ import ru.metaculture.protection.cosmetics.geckolib.GeckolibCosmeticRenderer;
 import ru.metaculture.protection.cosmetics.model.CosmeticModel;
 
 public final class MaceKosaRenderer {
-   public static final String COSMETIC_NAME = "Булава - Коса";
-   public static final String COSMETIC_TYPE = "bodywear";
+   public static final String COSMETIC_TYPE = "weapon";
 
    private MaceKosaRenderer() {
    }
 
    public static boolean isSelectedCosmetic(String type, String name) {
-      return COSMETIC_TYPE.equals(type) && COSMETIC_NAME.equals(name);
+      return COSMETIC_TYPE.equals(type);
    }
 
    public static boolean tryRenderHeld(
@@ -71,7 +70,7 @@ public final class MaceKosaRenderer {
       }
 
       Cosmetics cosmetics = resolveCosmetics();
-      if (cosmetics == null || !cosmetics.enabled || !COSMETIC_NAME.equals(cosmetics.bodywear.getValue())) {
+      if (cosmetics == null || !cosmetics.enabled || CosmeticPack.isNone(cosmetics.weapon.getValue())) {
          return false;
       }
 
@@ -80,11 +79,16 @@ public final class MaceKosaRenderer {
          return false;
       }
 
-      return CosmeticPack.resolve(COSMETIC_TYPE, COSMETIC_NAME) != null;
+      return CosmeticPack.resolve(COSMETIC_TYPE, cosmetics.weapon.getValue()) != null;
    }
 
    private static void renderModel(ItemDisplayContext context, MatrixStack matrices, VertexConsumerProvider buffers, int light) {
-      CosmeticModel model = CosmeticPack.resolve(COSMETIC_TYPE, COSMETIC_NAME);
+      Cosmetics cosmetics = resolveCosmetics();
+      if (cosmetics == null) {
+         return;
+      }
+
+      CosmeticModel model = CosmeticPack.resolve(COSMETIC_TYPE, cosmetics.weapon.getValue());
       if (model == null) {
          return;
       }

@@ -248,8 +248,8 @@
                       },
                       {
                           "id":  138,
-                          "type":  "bodywear",
-                          "name":  "Булава - Коса",
+                          "type":  "weapon",
+                          "name":  "Коса",
                           "path":  "bodywear/138/model.json"
                       },
                       {
