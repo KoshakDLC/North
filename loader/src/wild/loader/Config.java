@@ -17,6 +17,7 @@ final class Config {
    static final String REPO = "github.repo";
    static final String CLIENT_URL = "client.url";
    static final String DEFAULT_REPO = "KoshakDLC/North";
+   static final String DEFAULT_ASSET = "north-v1.jar";
    static final String RAM = "memory.gb";
    static final String NICK = "player.name";
    static final String LAUNCH_CMD = "launch.command";

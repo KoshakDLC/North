@@ -36,6 +36,10 @@ final class Downloader {
       "\"name\"\\s*:\\s*\"([^\"]+\\.jar)\".*?\"size\"\\s*:\\s*(\\d+).*?\"browser_download_url\"\\s*:\\s*\"([^\"]+)\"", Pattern.DOTALL
    );
    private static final Pattern TAG = Pattern.compile("\"tag_name\"\\s*:\\s*\"([^\"]+)\"");
+   private static final Pattern HTML_JAR = Pattern.compile("/releases/download/([^\"'/]+)/([^\"'/]+\\.jar)");
+   private static final Pattern CONTENT_RANGE = Pattern.compile("bytes \\d+-\\d+/(\\d+)");
+   private static final String BROWSER_UA =
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36";
    private static final int BUFFER = 1 << 16;
 
    private static final HttpClient CLIENT = HttpClient.newBuilder()
@@ -61,25 +65,143 @@ final class Downloader {
    /** Latest release of {@code owner/name}, or null when the repository has no published jar. */
    static Downloader.Asset latestRelease(String repository) throws IOException, InterruptedException {
       String repo = repository.trim();
+      IOException last = null;
+
+      try {
+         Downloader.Asset fromPage = readExpandedAssets(repo);
+         if (fromPage != null) {
+            return fromPage;
+         }
+      } catch (IOException exception) {
+         last = exception;
+      }
+
+      try {
+         Downloader.Asset direct = probeDownload(repo, "latest", Config.DEFAULT_ASSET);
+         if (direct != null) {
+            return direct;
+         }
+      } catch (IOException exception) {
+         last = exception;
+      }
+
+      try {
+         Downloader.Asset fromApi = readApiRelease(repo);
+         if (fromApi != null) {
+            return fromApi;
+         }
+      } catch (IOException exception) {
+         last = exception;
+      }
+
+      if (last != null) {
+         throw last;
+      }
+
+      return null;
+   }
+
+   /** Public GitHub HTML — no api.github.com, so no anonymous 403/rate limit. */
+   private static Downloader.Asset readExpandedAssets(String repository) throws IOException, InterruptedException {
+      String body = page("https://github.com/" + repository + "/releases/expanded_assets/latest");
+      Matcher jars = HTML_JAR.matcher(body);
+
+      while (jars.find()) {
+         String tag = jars.group(1);
+         String name = jars.group(2);
+         if (!name.contains("-sources") && !name.contains("-dev")) {
+            Downloader.Asset probed = probeDownload(repository, tag, name);
+            if (probed != null) {
+               return probed;
+            }
+
+            return new Downloader.Asset(
+               tag, name, "https://github.com/" + repository + "/releases/download/" + tag + "/" + name, -1L
+            );
+         }
+      }
+
+      return null;
+   }
+
+   private static Downloader.Asset probeDownload(String repository, String tag, String name) throws IOException, InterruptedException {
+      String url = "https://github.com/" + repository + "/releases/download/" + tag + "/" + name;
+      HttpRequest head = HttpRequest.newBuilder(URI.create(url))
+         .timeout(Duration.ofSeconds(20L))
+         .header("User-Agent", BROWSER_UA)
+         .method("HEAD", HttpRequest.BodyPublishers.noBody())
+         .build();
+      HttpResponse<Void> response = CLIENT.send(head, BodyHandlers.discarding());
+      int code = response.statusCode();
+      if (code == 404) {
+         return null;
+      }
+
+      if (code >= 200 && code < 300) {
+         long size = response.headers().firstValueAsLong("content-length").orElse(-1L);
+         return new Downloader.Asset(tag, name, url, size);
+      }
+
+      if (code == 403 || code == 405 || code == 501) {
+         HttpRequest ranged = HttpRequest.newBuilder(URI.create(url))
+            .timeout(Duration.ofSeconds(20L))
+            .header("User-Agent", BROWSER_UA)
+            .header("Range", "bytes=0-0")
+            .GET()
+            .build();
+         HttpResponse<Void> partial = CLIENT.send(ranged, BodyHandlers.discarding());
+         if (partial.statusCode() == 404) {
+            return null;
+         }
+
+         if (partial.statusCode() == 206 || partial.statusCode() >= 200 && partial.statusCode() < 300) {
+            return new Downloader.Asset(tag, name, url, measureLength(partial));
+         }
+      }
+
+      // HEAD/API часто отдают 403, а обычный GET файла с github.com проходит.
+      return new Downloader.Asset(tag, name, url, -1L);
+   }
+
+   private static long measureLength(HttpResponse<?> response) {
+      String range = response.headers().firstValue("content-range").orElse("");
+      Matcher matcher = CONTENT_RANGE.matcher(range);
+      return matcher.find() ? Long.parseLong(matcher.group(1)) : response.headers().firstValueAsLong("content-length").orElse(-1L);
+   }
+
+   private static String page(String url) throws IOException, InterruptedException {
+      HttpRequest request = HttpRequest.newBuilder(URI.create(url))
+         .timeout(Duration.ofSeconds(20L))
+         .header("Accept", "text/html")
+         .header("User-Agent", BROWSER_UA)
+         .GET()
+         .build();
+      HttpResponse<String> response = CLIENT.send(request, BodyHandlers.ofString(StandardCharsets.UTF_8));
+      if (response.statusCode() == 404) {
+         return "";
+      } else if (response.statusCode() < 200 || response.statusCode() >= 300) {
+         throw new IOException("GitHub ответил HTTP " + response.statusCode());
+      } else {
+         return response.body();
+      }
+   }
+
+   private static Downloader.Asset readApiRelease(String repository) throws IOException, InterruptedException {
       String[] endpoints = {
-         "https://api.github.com/repos/" + repo + "/releases/latest",
-         "https://api.github.com/repos/" + repo + "/releases/tags/latest"
+         "https://api.github.com/repos/" + repository + "/releases/latest",
+         "https://api.github.com/repos/" + repository + "/releases/tags/latest"
       };
       IOException last = null;
 
-      for (int attempt = 0; attempt < 3; attempt++) {
-         for (String endpoint : endpoints) {
-            try {
-               Downloader.Asset asset = readRelease(endpoint);
-               if (asset != null) {
-                  return asset;
-               }
-            } catch (IOException exception) {
-               last = exception;
+      for (String endpoint : endpoints) {
+         try {
+            Downloader.Asset asset = readRelease(endpoint);
+            if (asset != null) {
+               return asset;
             }
+         } catch (IOException exception) {
+            last = exception;
          }
-
-         Thread.sleep(400L * (attempt + 1));
       }
 
       if (last != null) {
@@ -93,7 +215,7 @@ final class Downloader {
       HttpRequest request = HttpRequest.newBuilder(URI.create(url))
          .timeout(Duration.ofSeconds(20L))
          .header("Accept", "application/vnd.github+json")
-         .header("User-Agent", "NorthLoader")
+         .header("User-Agent", BROWSER_UA)
          .GET()
          .build();
       HttpResponse<String> response = CLIENT.send(request, BodyHandlers.ofString(StandardCharsets.UTF_8));
@@ -123,7 +245,7 @@ final class Downloader {
       HttpRequest request = HttpRequest.newBuilder(URI.create(url))
          .timeout(Duration.ofSeconds(30L))
          .header("Accept", "application/json")
-         .header("User-Agent", "NorthLoader")
+         .header("User-Agent", BROWSER_UA)
          .GET()
          .build();
       HttpResponse<String> response = CLIENT.send(request, BodyHandlers.ofString(StandardCharsets.UTF_8));
@@ -195,7 +317,7 @@ final class Downloader {
       HttpRequest request = HttpRequest.newBuilder(URI.create(url))
          .timeout(Duration.ofMinutes(5L))
          .header("Accept", "application/octet-stream")
-         .header("User-Agent", "NorthLoader")
+         .header("User-Agent", BROWSER_UA)
          .GET()
          .build();
       HttpResponse<InputStream> response = CLIENT.send(request, BodyHandlers.ofInputStream());
