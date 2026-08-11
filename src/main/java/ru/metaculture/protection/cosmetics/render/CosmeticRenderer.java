@@ -49,7 +49,8 @@ public final class CosmeticRenderer {
       return switch (cosmetic.getPosition()) {
          case HEAD -> {
             this.transformToModelPart(playerModel.head);
-            yield 0.5F;
+            // 0.5 sits on the crown; Pulse hats/masks were floating above it.
+            yield 0.18F;
          }
          case ABOVE_HEAD -> 0.75F;
          case BODY -> {
