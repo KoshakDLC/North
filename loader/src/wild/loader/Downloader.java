@@ -50,11 +50,25 @@ final class Downloader {
    private Downloader() {
    }
 
-   record Asset(String tag, String name, String url, long size) {
+   record Asset(String tag, String name, String url, long size, String etag) {
+      Asset(String tag, String name, String url, long size) {
+         this(tag, name, url, size, "");
+      }
+
       /** Cache subfolder, so a new release downloads again while the jar keeps its real name. */
       String safeTag() {
          String safe = this.tag.replaceAll("[^A-Za-z0-9._-]", "_");
          return safe.isBlank() ? "latest" : safe;
+      }
+
+      /** Prefer ETag when GitHub keeps the same tag/name across rebuilds. */
+      String cacheKey() {
+         String raw = this.etag == null ? "" : this.etag.trim();
+         if (!raw.isEmpty()) {
+            return raw.replace("\"", "").replaceAll("[^A-Za-z0-9._-]", "_");
+         }
+
+         return Long.toString(this.size);
       }
    }
 
@@ -139,7 +153,8 @@ final class Downloader {
 
       if (code >= 200 && code < 300) {
          long size = response.headers().firstValueAsLong("content-length").orElse(-1L);
-         return new Downloader.Asset(tag, name, url, size);
+         String etag = response.headers().firstValue("etag").orElse("");
+         return new Downloader.Asset(tag, name, url, size, etag);
       }
 
       if (code == 403 || code == 405 || code == 501) {
@@ -155,7 +170,8 @@ final class Downloader {
          }
 
          if (partial.statusCode() == 206 || partial.statusCode() >= 200 && partial.statusCode() < 300) {
-            return new Downloader.Asset(tag, name, url, measureLength(partial));
+            String etag = partial.headers().firstValue("etag").orElse("");
+            return new Downloader.Asset(tag, name, url, measureLength(partial), etag);
          }
       }
 

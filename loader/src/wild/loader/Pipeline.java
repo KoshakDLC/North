@@ -181,8 +181,8 @@ final class Pipeline {
             } else {
                // Tag is often always "latest", so fold the size into the cache path —
                // otherwise a rebuilt release with the same tag can keep serving a stale jar.
-               Path cached = Config.cacheDir().resolve(asset.safeTag() + "-" + asset.size()).resolve(asset.name());
-               if (Files.isRegularFile(cached) && sizeOf(cached) == asset.size()) {
+               Path cached = Config.cacheDir().resolve(asset.safeTag() + "-" + asset.cacheKey()).resolve(asset.name());
+               if (asset.size() >= 0L && Files.isRegularFile(cached) && sizeOf(cached) == asset.size()) {
                   this.ok("Сборка уже скачана.");
                   return cached;
                }
