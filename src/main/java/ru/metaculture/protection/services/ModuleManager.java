@@ -29,7 +29,7 @@ public class ModuleManager {
          ActionRecorder.class, AhHelper.class, AirStuck.class, AncientXray.class, Animations.class, AntiAFK.class,
          AntiBot.class, AntiCrystal.class, AppleFarmer.class, Arrows.class, AspectRatio.class, AtmoDawnFog.class,
          AttackAura.class, AttackEffect.class, AutoAccept.class, AutoAncientBot.class, AutoAuth.class, AutoBuy.class,
-         AutoClan.class, AutoCraft.class, AutoCopperDange.class, AutoCristal.class, AutoDrop.class, AutoDuel.class, AutoExp.class,
+         AutoClan.class, AutoCraft.class, AutoCopperDange.class, AutoCristal.class, AutoDrop.class, AutoDuel.class, AutoEnd.class, AutoExp.class,
          AutoFish.class, AutoGApple.class, AutoInvisible.class, AutoLeave.class, AutoLes.class, AutoMace.class,
          AutoMine.class, AutoPotion.class, AutoPottBot.class, AutoResell.class, AutoSell.class, AutoSwap.class,
          AutoTool.class, AutoTotem.class, AutoVillageTrade.class, AutoWood.class, BaseFinder.class, Blink.class,

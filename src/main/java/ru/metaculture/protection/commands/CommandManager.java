@@ -19,6 +19,7 @@ public class CommandManager {
       this.register(new CocoaFarmCommand());
       this.register(new ChorusFarmCommand());
       this.register(new CopperFarmCommand());
+      this.register(new EndFarmCommand());
       this.register(new TelegramApiCommand());
       this.register(new MacroCommand());
       this.register(new GpsCommand());
