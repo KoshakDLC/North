@@ -221,13 +221,14 @@ def build_cubes():
     cubes.append(cube([-0.5, 15.05, z - 1.9], [1.05, 1.05, 0.5], uvs=UV_GOLD))
 
     # scythe crescent: plates chained from the mace head, each bent around its inner joint
+    # Negative Z angles curve the blade downward (concave down), like a real scythe.
     start_x, start_y = 1.45, 16.15
     plates = [
-        (5.1, 1.40, 0.44, 16.0),
-        (4.3, 1.18, 0.40, 38.0),
-        (3.5, 0.98, 0.36, 60.0),
-        (2.7, 0.78, 0.32, 82.0),
-        (1.8, 0.56, 0.28, 102.0),
+        (5.1, 1.40, 0.44, -16.0),
+        (4.3, 1.18, 0.40, -38.0),
+        (3.5, 0.98, 0.36, -60.0),
+        (2.7, 0.78, 0.32, -82.0),
+        (1.8, 0.56, 0.28, -102.0),
     ]
     for length, height, deep, ang in plates:
         origin = [start_x, start_y - height / 2, z - deep / 2]
@@ -246,7 +247,7 @@ def build_cubes():
         start_x += math.cos(rad) * (length - 0.15)
         start_y += math.sin(rad) * (length - 0.15)
     cubes.append(
-        cube([start_x, start_y - 0.16, z - 0.1], [1.2, 0.32, 0.2], [start_x, start_y, z], [0, 0, 118], uvs=UV_BONE)
+        cube([start_x, start_y - 0.16, z - 0.1], [1.2, 0.32, 0.2], [start_x, start_y, z], [0, 0, -118], uvs=UV_BONE)
     )
     return cubes
 
