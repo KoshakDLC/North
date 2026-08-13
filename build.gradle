@@ -42,16 +42,6 @@ dependencies {
 	// natives.zip.xz at runtime.
 	implementation files('libs/nether-pathfinder-1.4.1.jar')
 
-	// Ship the same jars inside the release client so the loader install works without extra mods.
-	include files('libs/Java-WebSocket-1.5.6.jar')
-	include files('libs/javassist-3.29.2-GA.jar')
-	include files('libs/json-20230618.jar')
-	include files('libs/reflections-0.10.2.jar')
-	include files('libs/netty-codec-socks-4.1.101.Final.jar')
-	include files('libs/netty-handler-proxy-4.1.101.Final.jar')
-	include files('libs/baritone-1.21.8-SNAPSHOT.jar')
-	include files('libs/nether-pathfinder-1.4.1.jar')
-
 	// Decompiled sources still carry lombok @Generated annotations (bodies are already expanded).
 	// compileOnly is enough to satisfy the imports.
 	compileOnly 'org.projectlombok:lombok:1.18.34'
