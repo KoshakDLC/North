@@ -43,6 +43,8 @@ public class AttackAura extends Module {
    public static NumberSetting radiusAtaki = new NumberSetting("Радиус атаки", 3.0F, 3.0F, 6.0F, 0.1F, false);
    public static NumberSetting radiusObnaruzheniya = new NumberSetting("Радиус обнаружения", 1.0F, 0.0F, 5.0F, 0.1F, false);
    public static ModeSetting rezhimRotatsii = new ModeSetting("Режим ротации", "Smooth", resolve());
+   public static ModeSetting deltaRezhim = new ModeSetting("Delta режим", "ФанТайм", "ФанТайм", "ФанТайм ФОВ", "Легит")
+      .setVisibilityCondition(() -> !rezhimRotatsii.is("Delta"));
    public static ButtonSetting konstruktorRotatsii = new ButtonSetting("Конструктор ротации", 0)
       .setRun("Открыть")
       .setRunnable(AttackAura::invoke27)
@@ -152,8 +154,8 @@ public class AttackAura extends Module {
 
    private static String[] resolve() {
       return check()
-         ? new String[]{"Matrix", "Random Smooth ", "Snap", "FOV", "Smooth ", "FunTime", "FT-New", "SpookyTime", "Legit", "Custom", "AI", "Neuro"}
-         : new String[]{"Matrix", "Random Smooth ", "Snap", "FOV", "Smooth ", "FunTime", "FT-New", "SpookyTime", "Legit", "Custom", "AI"};
+         ? new String[]{"Matrix", "Random Smooth ", "Snap", "FOV", "Smooth ", "FunTime", "FT-New", "SpookyTime", "Legit", "Delta", "Custom", "AI", "Neuro"}
+         : new String[]{"Matrix", "Random Smooth ", "Snap", "FOV", "Smooth ", "FunTime", "FT-New", "SpookyTime", "Legit", "Delta", "Custom", "AI"};
    }
 
    private static boolean check() {
@@ -171,6 +173,7 @@ public class AttackAura extends Module {
             radiusAtaki,
             radiusObnaruzheniya,
             rezhimRotatsii,
+            deltaRezhim,
             konstruktorRotatsii,
             aiJitter,
             aiDebugLog,
@@ -219,6 +222,7 @@ public class AttackAura extends Module {
          RandomAimStrategy.invoke4();
          NoiseAimStrategy.invoke2();
          DirectAimStrategy.invoke2();
+         DeltaAimStrategy.invoke3();
          this.invoke29();
          this.invoke30();
       } else if (livingEntity != null && CLIENT.player != null && CLIENT.world != null) {
@@ -232,6 +236,7 @@ public class AttackAura extends Module {
          RandomAimStrategy.invoke4();
          NoiseAimStrategy.invoke2();
          DirectAimStrategy.invoke2();
+         DeltaAimStrategy.invoke3();
          this.invoke29();
          this.invoke30();
       }
@@ -290,6 +295,7 @@ public class AttackAura extends Module {
             RandomAimStrategy.invoke4();
             NoiseAimStrategy.invoke2();
             DirectAimStrategy.invoke2();
+            DeltaAimStrategy.invoke3();
             this.invoke29();
             this.invoke30();
             this.invoke5();
@@ -455,6 +461,9 @@ public class AttackAura extends Module {
                                     }
 
                                     this.invoke23();
+                                    if (rezhimRotatsii.is("Delta")) {
+                                       DeltaAimStrategy.invoke2();
+                                    }
                                  }
                               }
                            }
@@ -478,9 +487,9 @@ public class AttackAura extends Module {
          double doubleValue = CLIENT.player.getY() - livingEntity.getY();
          boolean flag10 = CLIENT.player.getMainHandStack().getItem() == Items.MACE;
          boolean flag11 = !CLIENT.player.isOnGround() && (doubleValue >= 2.0 || flag10);
-         if (!rezhimRotatsii.is("Legit") && flag10 && flag11 && CLIENT.player.getY() > livingEntity.getY()) {
+         if (!rezhimRotatsii.is("Legit") && !rezhimRotatsii.is("Delta") && flag10 && flag11 && CLIENT.player.getY() > livingEntity.getY()) {
             RotationSmoothing.invoke3(livingEntity);
-         } else if (!rezhimRotatsii.is("Legit") && bulava.isEnabled() && flag10) {
+         } else if (!rezhimRotatsii.is("Legit") && !rezhimRotatsii.is("Delta") && bulava.isEnabled() && flag10) {
             SmoothAimStrategy.invoke(livingEntity);
          } else {
             float[] floatValues2 = resolve2(livingEntity);
@@ -543,6 +552,9 @@ public class AttackAura extends Module {
                   break;
                case "Neuro":
                   NeuroRotationController.invoke2(livingEntity, flag12, this.check12(), neuroDebug.isEnabled());
+                  break;
+               case "Delta":
+                  DeltaAimStrategy.invoke(livingEntity);
             }
          }
       }
@@ -864,6 +876,7 @@ public class AttackAura extends Module {
       AiRotationTrainer.invoke10();
       RandomAimStrategy.invoke3();
       DirectAimStrategy.invoke2();
+      DeltaAimStrategy.invoke3();
       AttackRotationController.invoke4();
       if (this.enabled) {
          NoiseAimStrategy.invoke3();
@@ -1373,6 +1386,7 @@ public class AttackAura extends Module {
       RandomAimStrategy.invoke3();
       NoiseAimStrategy.invoke2();
       DirectAimStrategy.invoke2();
+      DeltaAimStrategy.invoke3();
       CriticalHitController.invoke2();
       AttackRotationController.invoke4();
       super.onDisable();

@@ -23,9 +23,12 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 import org.wild.module.api.Module;
 import org.wild.module.api.ModuleRegister;
 
@@ -36,7 +39,7 @@ import org.wild.module.api.ModuleRegister;
 )
 public class TargetESP extends Module implements ShaderBinding {
    private static final String TARGET_ESP = "target_esp";
-   public static ModeSetting tekstura = new ModeSetting("Текстура", "Кристаллы", "Кристаллы", "Картинка", "Призраки", "Кольцо", "Кубики", "Сфера");
+   public static ModeSetting tekstura = new ModeSetting("Текстура", "Кристаллы", "Кристаллы", "Картинка", "Призраки", "Кольцо", "Кубики", "Сфера", "Дельта");
    public static ModeSetting rezhimPrizrakov = new ModeSetting("Режим призраков", "Обычный", "Обычный", "Новый", "Старый", "Орбита", "Спираль")
       .setVisibilityCondition(() -> !tekstura.is("Призраки"));
    public static ModeSetting rezhimKartinki = new ModeSetting("Режим картинки", "Клиент", "Клиент", "Ромб", "Ромб 2")
@@ -45,6 +48,20 @@ public class TargetESP extends Module implements ShaderBinding {
       .setVisibilityCondition(() -> !tekstura.is("Кубики"));
    public static ModeSetting rezhimKristallov = new ModeSetting("Режим кристаллов", "Орбита", "Орбита", "Хаос")
       .setVisibilityCondition(() -> !tekstura.is("Кристаллы"));
+   public static ModeSetting rezhimDelta = new ModeSetting("Режим Дельта", "Сферы", "Сферы", "Круг")
+      .setVisibilityCondition(() -> !tekstura.is("Дельта"));
+   private static final Vector3f[] DELTA_CRYSTAL_VERTS = new Vector3f[]{
+      new Vector3f(0.0F, 1.5F, 0.0F),
+      new Vector3f(0.0F, -1.5F, 0.0F),
+      new Vector3f(1.0F, 0.0F, 0.0F),
+      new Vector3f(-1.0F, 0.0F, 0.0F),
+      new Vector3f(0.0F, 0.0F, 1.0F),
+      new Vector3f(0.0F, 0.0F, -1.0F)
+   };
+   private static final int[][] DELTA_CRYSTAL_FACES = new int[][]{
+      {0, 4, 2}, {0, 3, 4}, {0, 5, 3}, {0, 2, 5}, {1, 2, 4}, {1, 4, 3}, {1, 3, 5}, {1, 5, 2}
+   };
+   private static final float[] DELTA_CRYSTAL_SHADE = new float[]{1.0F, 0.8F, 0.6F, 0.9F, 0.7F, 0.5F, 0.4F, 0.6F};
    public static FoundryShaderSetting foundryShader = new FoundryShaderSetting("Foundry Shader", ShaderSurface.ESP);
    private static final Identifier IDENTIFIER = Identifier.of("wild", "textures/world/target.png");
    private static final Identifier IDENTIFIER_2 = Identifier.of("wild", "textures/world/targetn2.png");
@@ -177,7 +194,7 @@ public class TargetESP extends Module implements ShaderBinding {
    static final RenderLayer RENDER_LAYER_11 = RenderLayer.of("targetesp_cube_outline", 1024, false, true, RENDER_PIPELINE_9, MultiPhaseParameters.builder().build(false));
 
    public TargetESP() {
-      this.addSettings(new Setting[]{tekstura, rezhimPrizrakov, rezhimKartinki, rezhimKubikov, rezhimKristallov, foundryShader});
+      this.addSettings(new Setting[]{tekstura, rezhimPrizrakov, rezhimKartinki, rezhimKubikov, rezhimKristallov, rezhimDelta, foundryShader});
    }
 
    @Override
@@ -295,6 +312,14 @@ public class TargetESP extends Module implements ShaderBinding {
 
                      if (tekstura.is("Кристаллы")) {
                         this.invoke19(render3DEvent.getMatrixStack(), immediate2, this.livingEntity, render3DEvent.getFloatValue());
+                     }
+
+                     if (tekstura.is("Дельта") && rezhimDelta.is("Сферы")) {
+                        this.invoke22(render3DEvent.getMatrixStack(), immediate2, this.livingEntity, render3DEvent.getFloatValue());
+                     }
+
+                     if (tekstura.is("Дельта") && rezhimDelta.is("Круг")) {
+                        this.invoke23(render3DEvent.getMatrixStack(), immediate2, this.livingEntity, render3DEvent.getFloatValue());
                      }
                   } finally {
                      WorldRenderBuffer.invoke();
@@ -1307,6 +1332,143 @@ public class TargetESP extends Module implements ShaderBinding {
          float[] p1 = points[edge[1]];
          vertexConsumer.vertex(matrix4f, p0[0], p0[1], p0[2]).color(r, g, b, a);
          vertexConsumer.vertex(matrix4f, p1[0], p1[1], p1[2]).color(r, g, b, a);
+      }
+   }
+
+   private void invoke22(MatrixStack matrixStack, Immediate immediate, LivingEntity livingEntity, float f) {
+      if (livingEntity == null) {
+         return;
+      }
+
+      float anim = (float)easedAnimation.getDoubleValue4();
+      if (anim <= 0.001F) {
+         return;
+      }
+
+      Vec3d renderPos = livingEntity.getLerpedPos(f);
+      Vec3d cameraPos = CLIENT.gameRenderer.getCamera().getPos();
+      Vec3d targetCenter = livingEntity.getPos().add(0.0, livingEntity.getHeight() / 2.0, 0.0);
+      float ringWidth = livingEntity.getWidth() * 1.5F;
+      float ringScale = 1.25F - 0.5F * anim;
+      float moving = (System.currentTimeMillis() % 360000L) / 2.5F + anim;
+      float hurt = this.measure2(livingEntity);
+      int themeRgb = compute(255, hurt) & 16777215;
+      int fill = compute2(themeRgb, (int)(255.0F * anim));
+
+      for (int i = 0; i < 360; i += 20) {
+         float angle = (float)Math.toRadians(i + moving * 0.3F);
+         float offsetX = (float)Math.sin(angle) * ringWidth * ringScale;
+         float offsetZ = (float)Math.cos(angle) * ringWidth * ringScale;
+         float offsetY = 0.1F + livingEntity.getHeight() * Math.abs((float)Math.sin(i));
+         Vec3d crystalPos = renderPos.add(offsetX, offsetY, offsetZ);
+         Vec3d look = targetCenter.subtract(crystalPos);
+         if (look.lengthSquared() < 1.0E-6) {
+            look = new Vec3d(0.0, 1.0, 0.0);
+         } else {
+            look = look.normalize();
+         }
+
+         matrixStack.push();
+         matrixStack.translate(crystalPos.x - cameraPos.x, crystalPos.y - cameraPos.y, crystalPos.z - cameraPos.z);
+         matrixStack.multiply(new Quaternionf().rotationTo(new Vector3f(0.0F, 1.0F, 0.0F), new Vector3f((float)look.x, (float)look.y, (float)look.z)));
+         matrixStack.scale(0.1F, 0.1F, 0.1F);
+         invoke24(immediate.getBuffer(RENDER_LAYER_10), matrixStack.peek().getPositionMatrix(), fill);
+         matrixStack.pop();
+
+         matrixStack.push();
+         matrixStack.translate(crystalPos.x - cameraPos.x, crystalPos.y - cameraPos.y, crystalPos.z - cameraPos.z);
+         matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-CLIENT.gameRenderer.getCamera().getYaw()));
+         matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(CLIENT.gameRenderer.getCamera().getPitch()));
+         float bloom = 1.5F * anim;
+         matrixStack.scale(bloom, bloom, bloom);
+         invoke14(immediate.getBuffer(RENDER_LAYER_5), matrixStack.peek().getPositionMatrix(), themeRgb, (int)(255.0F * anim));
+         matrixStack.pop();
+
+         matrixStack.push();
+         matrixStack.translate(crystalPos.x - cameraPos.x, crystalPos.y - cameraPos.y, crystalPos.z - cameraPos.z);
+         matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-CLIENT.gameRenderer.getCamera().getYaw()));
+         matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(CLIENT.gameRenderer.getCamera().getPitch()));
+         float bloomInner = 0.6F * anim;
+         matrixStack.scale(bloomInner, bloomInner, bloomInner);
+         invoke14(immediate.getBuffer(RENDER_LAYER_5), matrixStack.peek().getPositionMatrix(), themeRgb, (int)(51.0F * anim));
+         matrixStack.pop();
+      }
+   }
+
+   private void invoke23(MatrixStack matrixStack, Immediate immediate, LivingEntity livingEntity, float f) {
+      if (livingEntity == null) {
+         return;
+      }
+
+      float anim = (float)easedAnimation.getDoubleValue4();
+      if (anim <= 0.001F) {
+         return;
+      }
+
+      Vec3d renderPos = livingEntity.getLerpedPos(f);
+      Vec3d cameraPos = CLIENT.gameRenderer.getCamera().getPos();
+      float height = livingEntity.getHeight() + 0.15F;
+      float radius = livingEntity.getWidth() * 0.8F;
+      double time = System.currentTimeMillis() % 1750.0;
+      boolean inverted = time > 875.0;
+      double progress = time / 875.0;
+      double progress2 = inverted ? progress - 1.0 : 1.0 - progress;
+      double ease = progress2 < 0.5 ? 2.0 * progress2 * progress2 : 1.0 - Math.pow(-2.0 * progress2 + 2.0, 2.0) / 2.0;
+      float y = (float)(height * ease);
+      float offset = (float)(height * 0.8 * Math.min(ease, 1.0 - ease) * (inverted ? -1.0 : 1.0));
+      float hurt = this.measure2(livingEntity);
+      int color = compute2(compute(255, hurt) & 16777215, (int)(255.0F * anim));
+      int red = color >> 16 & 0xFF;
+      int green = color >> 8 & 0xFF;
+      int blue = color & 0xFF;
+      int alpha = (int)((color >>> 24 & 0xFF) * anim);
+
+      matrixStack.push();
+      matrixStack.translate(renderPos.x - cameraPos.x, renderPos.y - cameraPos.y, renderPos.z - cameraPos.z);
+      Matrix4f matrix = matrixStack.peek().getPositionMatrix();
+      VertexConsumer skirt = immediate.getBuffer(RENDER_LAYER_6);
+      for (int deg = 0; deg <= 360; deg++) {
+         double rad = Math.toRadians(deg);
+         float x = (float)(Math.cos(rad) * radius);
+         float z = (float)(Math.sin(rad) * radius);
+         skirt.vertex(matrix, x, y, z).color(red, green, blue, (int)(alpha * 0.55F));
+         skirt.vertex(matrix, x, y + offset, z).color(red, green, blue, 0);
+      }
+
+      VertexConsumer outline = immediate.getBuffer(RENDER_LAYER_7);
+      for (int deg = 0; deg < 360; deg++) {
+         double a0 = Math.toRadians(deg);
+         double a1 = Math.toRadians(deg + 1);
+         outline.vertex(matrix, (float)(Math.cos(a0) * radius), y, (float)(Math.sin(a0) * radius)).color(red, green, blue, alpha);
+         outline.vertex(matrix, (float)(Math.cos(a1) * radius), y, (float)(Math.sin(a1) * radius)).color(red, green, blue, alpha);
+      }
+
+      matrixStack.pop();
+   }
+
+   private static void invoke24(VertexConsumer vertexConsumer, Matrix4f matrix4f, int argb) {
+      int red = argb >> 16 & 0xFF;
+      int green = argb >> 8 & 0xFF;
+      int blue = argb & 0xFF;
+      int alpha = argb >>> 24 & 0xFF;
+
+      for (int i = 0; i < DELTA_CRYSTAL_FACES.length; i++) {
+         int[] face = DELTA_CRYSTAL_FACES[i];
+         float brightness = DELTA_CRYSTAL_SHADE[i];
+         int shaded = MathHelper.clamp((int)(red * brightness), 0, 255) << 16
+            | MathHelper.clamp((int)(green * brightness), 0, 255) << 8
+            | MathHelper.clamp((int)(blue * brightness), 0, 255);
+         int faceAlpha = alpha;
+         int faceRed = shaded >> 16 & 0xFF;
+         int faceGreen = shaded >> 8 & 0xFF;
+         int faceBlue = shaded & 0xFF;
+         for (int v = 0; v < 3; v++) {
+            Vector3f vertex = DELTA_CRYSTAL_VERTS[face[v]];
+            vertexConsumer.vertex(matrix4f, vertex.x, vertex.y, vertex.z).color(faceRed, faceGreen, faceBlue, faceAlpha);
+         }
+
+         Vector3f last = DELTA_CRYSTAL_VERTS[face[2]];
+         vertexConsumer.vertex(matrix4f, last.x, last.y, last.z).color(faceRed, faceGreen, faceBlue, faceAlpha);
       }
    }
 
